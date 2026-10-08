@@ -1,0 +1,21 @@
+# Secretos (NUNCA subir)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Python
+.venv/
+__pycache__/
+.pytest_cache/
+
+# Node / frontend
+node_modules/
+dist/
+
+# Vercel
+.vercel/
+
+# Sistema
+.DS_Store
