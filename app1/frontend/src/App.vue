@@ -1,7 +1,3 @@
-<script setup>
-import HelloWorld from './components/HelloWorld.vue'
-</script>
-
-<template>
-  <HelloWorld />
-</template>
+  <template>
+    <h1 class="text-3xl font-bold text-green-600">MeT</h1>
+  </template>
