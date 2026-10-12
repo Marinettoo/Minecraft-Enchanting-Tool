@@ -1,5 +1,7 @@
 """Backend App 1: validar, consultar una IA y devolver el contrato público."""
 
+import logging
+
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
@@ -43,6 +45,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         try:
             return validate_plan(plan, data)
         except (ValueError, TypeError) as exc:
+            logging.getLogger("uvicorn.error").warning("IA: el plan no pasa la validación: %s | plan=%.600s", exc, plan)
             raise AIError("RESPUESTA_INVALIDA", 502) from exc
 
     return application
