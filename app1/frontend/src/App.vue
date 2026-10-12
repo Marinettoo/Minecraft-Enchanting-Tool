@@ -1,79 +1,73 @@
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed, watch } from 'vue'
+import { OBJETOS, ENCANTAMIENTOS, INCOMPATIBLES, MAX_ENCANTAMIENTOS, etiqueta } from './data.js'
 
-// Mientras el backend no esté listo, dejar en true para usar una respuesta falsa.
-const USAR_RESPUESTA_FALSA = true
+// Para trabajar sin backend: VITE_USAR_RESPUESTA_FALSA=true en .env.local
+const USAR_RESPUESTA_FALSA = import.meta.env.VITE_USAR_RESPUESTA_FALSA === 'true'
 const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+const TIEMPO_MAX_MS = 65000 // el backend espera a la IA 60 s como máximo (AI_TIMEOUT_SECONDS)
 
-// Listas cerradas del contrato (sección 5). Ampliar cuando se acuerde con el backend.
-const objetos = [
-  { id: 'diamond_sword', nombre: 'Espada de diamante' },
-  { id: 'diamond_pickaxe', nombre: 'Pico de diamante' },
-  { id: 'diamond_helmet', nombre: 'Casco de diamante' },
-  { id: 'diamond_chestplate', nombre: 'Pechera de diamante' },
-  { id: 'diamond_boots', nombre: 'Botas de diamante' },
-  { id: 'bow', nombre: 'Arco' },
-]
-
-const lista = reactive([
-  { id: 'sharpness', nombre: 'Filo', max: 5 },
-  { id: 'smite', nombre: 'Castigo', max: 5 },
-  { id: 'bane_of_arthropods', nombre: 'Perdición de los artrópodos', max: 5 },
-  { id: 'knockback', nombre: 'Empuje', max: 2 },
-  { id: 'fire_aspect', nombre: 'Aspecto ígneo', max: 2 },
-  { id: 'looting', nombre: 'Botín', max: 3 },
-  { id: 'sweeping_edge', nombre: 'Filo barredor', max: 3 },
-  { id: 'unbreaking', nombre: 'Irrompibilidad', max: 3 },
-  { id: 'mending', nombre: 'Reparación', max: 1 },
-  { id: 'efficiency', nombre: 'Eficiencia', max: 5 },
-  { id: 'fortune', nombre: 'Fortuna', max: 3 },
-  { id: 'silk_touch', nombre: 'Toque de seda', max: 1 },
-  { id: 'protection', nombre: 'Protección', max: 4 },
-  { id: 'thorns', nombre: 'Espinas', max: 3 },
-  { id: 'feather_falling', nombre: 'Caída de pluma', max: 4 },
-  { id: 'power', nombre: 'Poder', max: 5 },
-  { id: 'infinity', nombre: 'Infinidad', max: 1 },
-].map((e) => ({ ...e, activo: false, nivel: e.max })))
+const objetos = Object.entries(OBJETOS).map(([id, o]) => ({ id, nombre: o.nombre }))
 
 const objeto = ref('')
 const estado = ref('entrada') // entrada | espera | resultado | error
 const resultado = ref(null)
 const mensaje = ref('')
 
-const esperar = (ms) => new Promise((r) => setTimeout(r, ms))
+// Estado de cada encantamiento (marcado y nivel elegido)
+const seleccion = reactive(
+  Object.fromEntries(Object.entries(ENCANTAMIENTOS).map(([id, e]) => [id, { activo: false, nivel: e.max }])),
+)
+
+// Solo los encantamientos que admite el objeto elegido
+const lista = computed(() => {
+  const tipo = OBJETOS[objeto.value]?.tipo
+  if (!tipo) return []
+  return Object.entries(ENCANTAMIENTOS)
+    .filter(([, e]) => e.tipos.includes(tipo))
+    .map(([id, e]) => ({ id, nombre: e.nombre, max: e.max }))
+})
+
+const activos = computed(() => lista.value.filter((e) => seleccion[e.id].activo))
+
+// Un encantamiento queda bloqueado si es incompatible con otro marcado
+// o si ya se han marcado 8.
+function bloqueado(id) {
+  if (seleccion[id].activo) return false
+  if (activos.value.length >= MAX_ENCANTAMIENTOS) return true
+  return INCOMPATIBLES.some((g) => g.includes(id) && g.some((o) => o !== id && seleccion[o].activo))
+}
+
+watch(objeto, () => {
+  for (const s of Object.values(seleccion)) s.activo = false
+  estado.value = 'entrada'
+  resultado.value = null
+})
+
+function fallo(texto) {
+  mensaje.value = texto
+  estado.value = 'error'
+}
 
 async function enviar() {
   if (estado.value === 'espera') return // evita envíos duplicados
 
-  const elegidos = lista
-    .filter((e) => e.activo)
-    .map((e) => ({ nombre: e.id, nivel: Number(e.nivel) }))
+  const elegidos = activos.value.map((e) => ({ nombre: e.id, nivel: Number(seleccion[e.id].nivel) }))
 
   // Validación del frontend (ayuda al usuario; el backend vuelve a validar)
-  if (!objeto.value) {
-    mensaje.value = 'Elige un objeto.'
-    estado.value = 'error'
-    return
-  }
-  if (elegidos.length === 0 || elegidos.length > 8) {
-    mensaje.value = 'Elige entre 1 y 8 encantamientos.'
-    estado.value = 'error'
-    return
-  }
+  if (!objeto.value) return fallo('Elige un objeto.')
+  if (elegidos.length === 0) return fallo('Elige al menos un encantamiento.')
 
   estado.value = 'espera'
   resultado.value = null
   try {
     let datos
     if (USAR_RESPUESTA_FALSA) {
-      await esperar(800)
+      await new Promise((r) => setTimeout(r, 800))
       datos = {
         resultado: {
-          pasos: [
-            { orden: 1, izquierda: 'Objeto', derecha: 'Libro de ejemplo', coste_niveles: 5 },
-            { orden: 2, izquierda: 'Objeto (con ejemplo)', derecha: 'Otro libro', coste_niveles: 3 },
-          ],
-          coste_total_niveles: 8,
+          pasos: [{ orden: 1, izquierda: 'Objeto', derecha: 'Libro de ejemplo', coste_niveles: 5 }],
+          coste_total_niveles: 5,
           advertencias: ['Respuesta falsa de prueba.'],
         },
       }
@@ -82,18 +76,20 @@ async function enviar() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ objeto: objeto.value, encantamientos: elegidos }),
+        signal: AbortSignal.timeout(TIEMPO_MAX_MS),
       })
       const cuerpo = await resp.json().catch(() => ({}))
-      if (!resp.ok) {
-        throw new Error(cuerpo?.error?.mensaje || 'La petición no es válida o ha fallado.')
-      }
+      if (!resp.ok) return fallo(cuerpo?.error?.mensaje || 'La petición ha fallado.')
       datos = cuerpo
     }
     resultado.value = datos.resultado
     estado.value = 'resultado'
   } catch (e) {
-    mensaje.value = e.message || 'No se ha podido completar la petición.'
-    estado.value = 'error'
+    fallo(
+      e?.name === 'TimeoutError'
+        ? 'El servidor tarda demasiado en responder. Inténtalo más tarde.'
+        : 'No se puede conectar con el servidor. Comprueba que el backend está en marcha.',
+    )
   }
 }
 </script>
@@ -114,15 +110,16 @@ async function enviar() {
 
       <fieldset>
         <legend class="mb-2 font-semibold">Encantamientos (máximo 8)</legend>
+        <p v-if="!objeto" class="text-sm text-gray-600">Elige primero un objeto.</p>
         <ul class="grid gap-2 sm:grid-cols-2">
           <li v-for="e in lista" :key="e.id" class="flex items-center justify-between gap-2 rounded border border-gray-300 p-2">
             <label class="flex items-center gap-2">
-              <input v-model="e.activo" type="checkbox" class="h-4 w-4 accent-green-700" />
+              <input v-model="seleccion[e.id].activo" type="checkbox" :disabled="bloqueado(e.id)" class="h-4 w-4 accent-green-700 disabled:opacity-40" />
               {{ e.nombre }}
             </label>
             <select
-              v-model="e.nivel"
-              :disabled="!e.activo"
+              v-model="seleccion[e.id].nivel"
+              :disabled="!seleccion[e.id].activo"
               :aria-label="`Nivel de ${e.nombre}`"
               class="rounded border border-gray-400 p-1 disabled:opacity-40"
             >
@@ -149,7 +146,7 @@ async function enviar() {
       <h2 class="mb-2 text-xl font-bold">Orden recomendado</h2>
       <ol class="list-decimal space-y-1 pl-5">
         <li v-for="p in resultado.pasos" :key="p.orden" class="break-words">
-          {{ p.izquierda }} + {{ p.derecha }}: {{ p.coste_niveles }} niveles
+          {{ etiqueta(p.izquierda) }} + {{ etiqueta(p.derecha) }}: {{ p.coste_niveles }} niveles
         </li>
       </ol>
       <p class="mt-3 font-semibold">Coste total: {{ resultado.coste_total_niveles }} niveles</p>
