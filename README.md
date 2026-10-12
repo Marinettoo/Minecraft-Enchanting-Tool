@@ -15,5 +15,30 @@ Proyecto de la práctica PR01-UD1 (curso de especialización en Aprendizaje auto
 - `infra/`: Docker y despliegue en AWS EC2.
 - `presentacion/`: PowerPoint de la defensa.
 
+## Cómo ejecutar App 1
+
+Hacen falta dos terminales. Requisitos: Python 3.12 o 3.13 (el backend no funciona con 3.9) y Node 20+.
+
+**Backend** (desde `app1/backend`):
+
+```bash
+python3.12 -m venv .venv
+source .venv/bin/activate          # en Windows: .\.venv\Scripts\Activate.ps1
+pip install -r requirements-dev.txt
+cp .env.example .env               # edita .env: ver abajo
+uvicorn main:app --reload          # http://localhost:8000/docs
+```
+
+En `.env`: `AI_MODE=mock` usa datos ficticios; para IA real pon `AI_MODE=openrouter`,
+tu `OPENROUTER_API_KEY` y `OPENROUTER_MODEL` (id exacto de un modelo gratuito de OpenRouter).
+El `.env` no se sube a Git.
+
+**Frontend** (desde `app1/frontend`):
+
+```bash
+npm install
+npm run dev                        # http://localhost:5173
+```
+
 ## Estado
-Hito H0 (inicio). Pendiente: instrucciones de instalación y ejecución, versiones, URLs.
+Hito H0 (inicio). Pendiente: versiones exactas y URLs de despliegue.

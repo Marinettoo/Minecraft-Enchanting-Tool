@@ -1,79 +1,100 @@
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed, watch } from 'vue'
+import { OBJETOS, TIPOS_OBJETO, ENCANTAMIENTOS, INCOMPATIBLES, MAX_ENCANTAMIENTOS, etiqueta, romano, iconoObjeto } from './data.js'
+import ItemIcon from './components/ItemIcon.vue'
 
-// Mientras el backend no esté listo, dejar en true para usar una respuesta falsa.
-const USAR_RESPUESTA_FALSA = true
+// Para trabajar sin backend: VITE_USAR_RESPUESTA_FALSA=true en .env.local
+const USAR_RESPUESTA_FALSA = import.meta.env.VITE_USAR_RESPUESTA_FALSA === 'true'
 const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+const TIEMPO_MAX_MS = 65000 // el backend espera a la IA 60 s como máximo (AI_TIMEOUT_SECONDS)
 
-// Listas cerradas del contrato (sección 5). Ampliar cuando se acuerde con el backend.
-const objetos = [
-  { id: 'diamond_sword', nombre: 'Espada de diamante' },
-  { id: 'diamond_pickaxe', nombre: 'Pico de diamante' },
-  { id: 'diamond_helmet', nombre: 'Casco de diamante' },
-  { id: 'diamond_chestplate', nombre: 'Pechera de diamante' },
-  { id: 'diamond_boots', nombre: 'Botas de diamante' },
-  { id: 'bow', nombre: 'Arco' },
-]
+// El objeto se elige en dos pasos: tipo (pico, casco, arco...) y material (netherita...)
+const tipo = ref('')
+const material = ref('')
+const materialesDisponibles = computed(() => TIPOS_OBJETO.find((t) => t.id === tipo.value)?.materiales ?? [])
 
-const lista = reactive([
-  { id: 'sharpness', nombre: 'Filo', max: 5 },
-  { id: 'smite', nombre: 'Castigo', max: 5 },
-  { id: 'bane_of_arthropods', nombre: 'Perdición de los artrópodos', max: 5 },
-  { id: 'knockback', nombre: 'Empuje', max: 2 },
-  { id: 'fire_aspect', nombre: 'Aspecto ígneo', max: 2 },
-  { id: 'looting', nombre: 'Botín', max: 3 },
-  { id: 'sweeping_edge', nombre: 'Filo barredor', max: 3 },
-  { id: 'unbreaking', nombre: 'Irrompibilidad', max: 3 },
-  { id: 'mending', nombre: 'Reparación', max: 1 },
-  { id: 'efficiency', nombre: 'Eficiencia', max: 5 },
-  { id: 'fortune', nombre: 'Fortuna', max: 3 },
-  { id: 'silk_touch', nombre: 'Toque de seda', max: 1 },
-  { id: 'protection', nombre: 'Protección', max: 4 },
-  { id: 'thorns', nombre: 'Espinas', max: 3 },
-  { id: 'feather_falling', nombre: 'Caída de pluma', max: 4 },
-  { id: 'power', nombre: 'Poder', max: 5 },
-  { id: 'infinity', nombre: 'Infinidad', max: 1 },
-].map((e) => ({ ...e, activo: false, nivel: e.max })))
+// Id final del objeto (p. ej. netherite_pickaxe). Sin material (arco...), es solo el tipo.
+const objeto = computed(() => {
+  if (!tipo.value) return ''
+  if (materialesDisponibles.value.length === 0) return tipo.value
+  return material.value ? `${material.value}_${tipo.value}` : ''
+})
+const vistaPrevia = computed(() => iconoObjeto(objeto.value) ?? (tipo.value ? { forma: tipo.value, material: 'neutro' } : null))
 
-const objeto = ref('')
+watch(tipo, () => {
+  if (!materialesDisponibles.value.some((m) => m.id === material.value)) material.value = ''
+})
 const estado = ref('entrada') // entrada | espera | resultado | error
 const resultado = ref(null)
 const mensaje = ref('')
 
-const esperar = (ms) => new Promise((r) => setTimeout(r, ms))
+// Estado de cada encantamiento (marcado y nivel elegido)
+const seleccion = reactive(
+  Object.fromEntries(Object.entries(ENCANTAMIENTOS).map(([id, e]) => [id, { activo: false, nivel: e.max }])),
+)
+
+// Solo los encantamientos que admite el objeto elegido
+const lista = computed(() => {
+  const tipo = OBJETOS[objeto.value]?.tipo
+  if (!tipo) return []
+  return Object.entries(ENCANTAMIENTOS)
+    .filter(([, e]) => e.tipos.includes(tipo))
+    .map(([id, e]) => ({ id, nombre: e.nombre, max: e.max }))
+})
+
+const activos = computed(() => lista.value.filter((e) => seleccion[e.id].activo))
+
+// Un encantamiento queda bloqueado si es incompatible con otro marcado
+// o si ya se han marcado 8.
+function bloqueado(id) {
+  if (seleccion[id].activo) return false
+  if (activos.value.length >= MAX_ENCANTAMIENTOS) return true
+  return INCOMPATIBLES.some((g) => g.includes(id) && g.some((o) => o !== id && seleccion[o].activo))
+}
+
+watch(objeto, () => {
+  for (const s of Object.values(seleccion)) s.activo = false
+  estado.value = 'entrada'
+  resultado.value = null
+})
+
+// Icono de una etiqueta del resultado: objeto, libro o resultado de un paso anterior
+function icono(texto, profundidad = 0) {
+  if (OBJETOS[texto]) return { ...iconoObjeto(texto), encantado: false }
+  if (texto.startsWith('Libro de')) return { forma: 'book', material: 'neutro', encantado: false }
+  const m = /^Resultado del paso (\d+)$/.exec(texto)
+  const paso = m && profundidad < 8 && resultado.value?.pasos[Number(m[1]) - 1]
+  if (paso) {
+    const base = icono(paso.izquierda, profundidad + 1)
+    return base && { ...base, encantado: base.forma !== 'book' }
+  }
+  return null
+}
+
+function fallo(texto) {
+  mensaje.value = texto
+  estado.value = 'error'
+}
 
 async function enviar() {
   if (estado.value === 'espera') return // evita envíos duplicados
 
-  const elegidos = lista
-    .filter((e) => e.activo)
-    .map((e) => ({ nombre: e.id, nivel: Number(e.nivel) }))
+  const elegidos = activos.value.map((e) => ({ nombre: e.id, nivel: Number(seleccion[e.id].nivel) }))
 
   // Validación del frontend (ayuda al usuario; el backend vuelve a validar)
-  if (!objeto.value) {
-    mensaje.value = 'Elige un objeto.'
-    estado.value = 'error'
-    return
-  }
-  if (elegidos.length === 0 || elegidos.length > 8) {
-    mensaje.value = 'Elige entre 1 y 8 encantamientos.'
-    estado.value = 'error'
-    return
-  }
+  if (!objeto.value) return fallo('Elige un objeto.')
+  if (elegidos.length === 0) return fallo('Elige al menos un encantamiento.')
 
   estado.value = 'espera'
   resultado.value = null
   try {
     let datos
     if (USAR_RESPUESTA_FALSA) {
-      await esperar(800)
+      await new Promise((r) => setTimeout(r, 800))
       datos = {
         resultado: {
-          pasos: [
-            { orden: 1, izquierda: 'Objeto', derecha: 'Libro de ejemplo', coste_niveles: 5 },
-            { orden: 2, izquierda: 'Objeto (con ejemplo)', derecha: 'Otro libro', coste_niveles: 3 },
-          ],
-          coste_total_niveles: 8,
+          pasos: [{ orden: 1, izquierda: 'Objeto', derecha: 'Libro de ejemplo', coste_niveles: 5 }],
+          coste_total_niveles: 5,
           advertencias: ['Respuesta falsa de prueba.'],
         },
       }
@@ -82,80 +103,127 @@ async function enviar() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ objeto: objeto.value, encantamientos: elegidos }),
+        signal: AbortSignal.timeout(TIEMPO_MAX_MS),
       })
       const cuerpo = await resp.json().catch(() => ({}))
-      if (!resp.ok) {
-        throw new Error(cuerpo?.error?.mensaje || 'La petición no es válida o ha fallado.')
-      }
+      if (!resp.ok) return fallo(cuerpo?.error?.mensaje || 'La petición ha fallado.')
       datos = cuerpo
     }
     resultado.value = datos.resultado
     estado.value = 'resultado'
   } catch (e) {
-    mensaje.value = e.message || 'No se ha podido completar la petición.'
-    estado.value = 'error'
+    fallo(
+      e?.name === 'TimeoutError'
+        ? 'El servidor tarda demasiado en responder. Inténtalo más tarde.'
+        : 'No se puede conectar con el servidor. Comprueba que el backend está en marcha.',
+    )
   }
 }
 </script>
 
 <template>
-  <main class="mx-auto max-w-2xl p-4 sm:p-8">
-    <h1 class="text-3xl font-bold text-green-700">MeT</h1>
-    <p class="mb-6 text-gray-600">Minecraft Enchanting Tool: el orden de encantado que gasta menos niveles.</p>
+  <main class="libro">
+    <!-- Página izquierda: el formulario -->
+    <form class="pagina pagina-izq" @submit.prevent="enviar">
+      <header class="cabecera">
+        <div>
+          <h1 class="titulo">MeT</h1>
+          <p class="subtitulo">Minecraft Enchanting Tool</p>
+        </div>
+        <div class="ranura" aria-hidden="true">
+          <ItemIcon v-if="vistaPrevia" v-bind="vistaPrevia" :size="44" />
+        </div>
+      </header>
 
-    <form class="space-y-6" @submit.prevent="enviar">
-      <div>
-        <label for="objeto" class="mb-1 block font-semibold">Objeto</label>
-        <select id="objeto" v-model="objeto" class="w-full rounded border border-gray-400 p-2 focus:outline-2 focus:outline-green-600">
-          <option value="" disabled>Elige un objeto…</option>
-          <option v-for="o in objetos" :key="o.id" :value="o.id">{{ o.nombre }}</option>
-        </select>
+      <div class="campo campo-doble">
+        <div>
+          <label for="tipo">Objeto</label>
+          <select id="tipo" v-model="tipo" class="control">
+            <option value="" disabled>Elige…</option>
+            <option v-for="t in TIPOS_OBJETO" :key="t.id" :value="t.id">{{ t.nombre }}</option>
+          </select>
+        </div>
+        <div>
+          <label for="material">Material</label>
+          <select id="material" v-model="material" class="control" :disabled="!materialesDisponibles.length">
+            <option value="" disabled>{{ tipo && !materialesDisponibles.length ? 'No aplica' : 'Elige…' }}</option>
+            <option v-for="m in materialesDisponibles" :key="m.id" :value="m.id">{{ m.nombre }}</option>
+          </select>
+        </div>
       </div>
 
-      <fieldset>
-        <legend class="mb-2 font-semibold">Encantamientos (máximo 8)</legend>
-        <ul class="grid gap-2 sm:grid-cols-2">
-          <li v-for="e in lista" :key="e.id" class="flex items-center justify-between gap-2 rounded border border-gray-300 p-2">
-            <label class="flex items-center gap-2">
-              <input v-model="e.activo" type="checkbox" class="h-4 w-4 accent-green-700" />
-              {{ e.nombre }}
+      <fieldset class="campo">
+        <legend>
+          <span>Encantamientos</span>
+          <span class="contador">{{ activos.length }}/{{ MAX_ENCANTAMIENTOS }}</span>
+        </legend>
+        <p v-if="!objeto" class="pista">Elige primero un objeto{{ tipo ? ' y su material' : '' }}.</p>
+        <ul class="list-none m-0 p-0">
+          <li v-for="e in lista" :key="e.id" class="enc">
+            <label>
+              <input v-model="seleccion[e.id].activo" type="checkbox" :disabled="bloqueado(e.id)" />
+              <span>{{ e.nombre }}</span>
             </label>
             <select
-              v-model="e.nivel"
-              :disabled="!e.activo"
+              v-model="seleccion[e.id].nivel"
+              :disabled="!seleccion[e.id].activo"
               :aria-label="`Nivel de ${e.nombre}`"
-              class="rounded border border-gray-400 p-1 disabled:opacity-40"
+              class="control control-nivel"
             >
-              <option v-for="n in e.max" :key="n" :value="n">{{ n }}</option>
+              <option v-for="n in e.max" :key="n" :value="n">{{ romano(n) }}</option>
             </select>
           </li>
         </ul>
       </fieldset>
 
-      <button
-        type="submit"
-        :disabled="estado === 'espera'"
-        class="w-full rounded bg-green-700 px-4 py-3 font-semibold text-white hover:bg-green-800 focus:outline-2 focus:outline-offset-2 focus:outline-green-700 disabled:cursor-not-allowed disabled:opacity-50"
-      >
-        {{ estado === 'espera' ? 'Calculando…' : 'Calcular orden' }}
+      <button type="submit" class="boton" :disabled="estado === 'espera'">
+        {{ estado === 'espera' ? 'Encantando…' : 'Calcular orden' }}
       </button>
     </form>
 
-    <p v-if="estado === 'error'" role="alert" class="mt-6 rounded border border-red-300 bg-red-50 p-3 text-red-800">
-      {{ mensaje }}
-    </p>
+    <!-- Página derecha: el resultado -->
+    <section class="pagina pagina-der" aria-live="polite">
+      <h2 class="encabezado">Orden del yunque</h2>
 
-    <section v-if="estado === 'resultado' && resultado" class="mt-6 rounded border border-green-300 bg-green-50 p-4" aria-live="polite">
-      <h2 class="mb-2 text-xl font-bold">Orden recomendado</h2>
-      <ol class="list-decimal space-y-1 pl-5">
-        <li v-for="p in resultado.pasos" :key="p.orden" class="break-words">
-          {{ p.izquierda }} + {{ p.derecha }}: {{ p.coste_niveles }} niveles
-        </li>
-      </ol>
-      <p class="mt-3 font-semibold">Coste total: {{ resultado.coste_total_niveles }} niveles</p>
-      <ul v-if="resultado.advertencias?.length" class="mt-2 list-disc pl-5 text-sm text-gray-700">
-        <li v-for="(a, i) in resultado.advertencias" :key="i">{{ a }}</li>
-      </ul>
+      <template v-if="estado === 'espera'">
+        <div class="brillo" aria-hidden="true"></div>
+        <p class="pista">El libro está brillando… la IA calcula el orden más barato.</p>
+      </template>
+
+      <p v-else-if="estado === 'error'" role="alert" class="error">{{ mensaje }}</p>
+
+      <template v-else-if="estado === 'resultado' && resultado">
+        <ol class="pasos">
+          <li v-for="p in resultado.pasos" :key="p.orden" class="paso">
+            <span class="paso-n">{{ p.orden }}</span>
+            <span class="paso-texto">
+              <span class="linea">
+                <ItemIcon v-if="icono(p.izquierda)" v-bind="icono(p.izquierda)" :size="24" />
+                <span>{{ etiqueta(p.izquierda) }}</span>
+              </span>
+              <span class="linea">
+                <span class="paso-mas">+</span>
+                <ItemIcon v-if="icono(p.derecha)" v-bind="icono(p.derecha)" :size="24" />
+                <span>{{ etiqueta(p.derecha) }}</span>
+              </span>
+            </span>
+            <span class="paso-coste">{{ p.coste_niveles }} niv.</span>
+          </li>
+        </ol>
+        <p class="total">
+          <span>Coste total</span>
+          <strong><span class="orbe" aria-hidden="true"></span>{{ resultado.coste_total_niveles }} niveles</strong>
+        </p>
+        <ul v-if="resultado.advertencias?.length" class="avisos">
+          <li v-for="(a, i) in resultado.advertencias" :key="i">{{ a }}</li>
+        </ul>
+      </template>
+
+      <div v-else class="hueco">
+        <p class="pista">
+          Elige un objeto y sus encantamientos en la página de la izquierda y pulsa «Calcular orden».
+        </p>
+      </div>
     </section>
   </main>
 </template>

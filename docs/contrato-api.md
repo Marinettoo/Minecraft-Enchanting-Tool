@@ -86,7 +86,7 @@ Como el usuario no escribe texto libre sino que elige de listas, la validación 
 
 Objetos permitidos (propuesta inicial, se puede ampliar): espada, hacha, pico, pala, azada, casco, pechera, grebas, botas, arco, ballesta, caña de pescar, tridente. En el código se escriben en inglés con el material (por ejemplo `diamond_sword`, `netherite_helmet`).
 
-Encantamientos y nivel máximo (Java; propuesta inicial, contrastadla con la wiki de Minecraft antes de fijarla):
+Encantamientos y nivel máximo (Java; qué objetos admite cada uno está en `rules.py` y en `data.js`; contrastadlo con la wiki de Minecraft antes de fijarlo):
 
 | Nombre en el código | Nivel máximo |
 | --- | --- |
@@ -97,18 +97,40 @@ Encantamientos y nivel máximo (Java; propuesta inicial, contrastadla con la wik
 | fire\_aspect | 2 |
 | looting | 3 |
 | sweeping\_edge | 3 |
-| unbreaking | 3 |
-| mending | 1 |
 | efficiency | 5 |
 | fortune | 3 |
 | silk\_touch | 1 |
 | protection | 4 |
+| fire\_protection | 4 |
+| blast\_protection | 4 |
+| projectile\_protection | 4 |
 | thorns | 3 |
+| respiration | 3 |
+| aqua\_affinity | 1 |
 | feather\_falling | 4 |
+| depth\_strider | 3 |
+| frost\_walker | 2 |
+| soul\_speed | 3 |
+| swift\_sneak | 3 |
 | power | 5 |
+| punch | 2 |
+| flame | 1 |
 | infinity | 1 |
+| multishot | 1 |
+| piercing | 4 |
+| quick\_charge | 3 |
+| loyalty | 3 |
+| riptide | 3 |
+| channeling | 1 |
+| impaling | 5 |
+| luck\_of\_the\_sea | 3 |
+| lure | 3 |
+| unbreaking | 3 |
+| mending | 1 |
+| binding\_curse | 1 |
+| vanishing\_curse | 1 |
 
-Incompatibles que el backend debe rechazar con 422: Filo con Castigo con Perdición de los artrópodos; Toque de seda con Fortuna; Infinidad con Reparación; y los distintos tipos de Protección entre sí.
+Incompatibles que el backend debe rechazar con 422: Filo, Castigo y Perdición de los artrópodos entre sí; Toque de seda con Fortuna; Infinidad con Reparación; los cuatro tipos de Protección entre sí; Agilidad acuática con Paso helado; Multidisparo con Perforación; Propulsión acuática con Lealtad y con Conductividad.
 
 ## 6. Reglas del flujo y reparto de trabajo
 
