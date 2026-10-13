@@ -5,13 +5,29 @@ Mini aplicación web que, dado un objeto de Minecraft y los encantamientos desea
 Proyecto de la práctica PR01-UD1 (curso de especialización en Aprendizaje automático, módulo de Desarrollo de componentes software).
 
 ## Integrantes
-- Jesús Pérez Marinetto
-- (compañero/a)
+- Jesús Pérez Marinetto (GitHub: Marinettoo): frontend.
+- Hugo Cáceres (GitHub: HugoCaceres22): backend.
+
+## Aplicación publicada
+- Web: https://met-frontend-zeta.vercel.app
+- API: https://minecraft-enchanting-tool.vercel.app (ruta `POST /api/procesar`)
+
+Detalles en [`docs/despliegue.md`](docs/despliegue.md).
+
+## Tecnologías
+- Frontend: Vue 3 (`<script setup>`), Vite, Tailwind CSS 4, tipografía Monocraft (licencia OFL).
+- Backend: FastAPI, pydantic, httpx.
+- IA: OpenRouter con el modelo gratuito `poolside/laguna-s-2.1:free`. El orden del yunque lo calcula solo la IA.
+- Despliegue: Vercel (dos proyectos, frontend y backend).
 
 ## Estructura
 - `app1/`: aplicación 1 (FastAPI + Vue/React + Tailwind), construida a mano.
 - `app2/`: aplicación 2, creada desde cero con GitHub Spec Kit y Clerk.
-- `docs/`: ERS, contrato de la API, pruebas, comparativa, despliegues y uso de IA.
+- `docs/`: documentación del proyecto:
+  - [`contrato-api.md`](docs/contrato-api.md): contrato entre frontend y backend.
+  - [`despliegue.md`](docs/despliegue.md): cómo está desplegada la App 1.
+  - [`uso-ia.md`](docs/uso-ia.md): uso de la IA en la app y en el desarrollo.
+  - [`pruebas.md`](docs/pruebas.md): pruebas automáticas y manuales.
 - `infra/`: Docker y despliegue en AWS EC2.
 - `presentacion/`: PowerPoint de la defensa.
 
@@ -41,4 +57,4 @@ npm run dev                        # http://localhost:5173
 ```
 
 ## Estado
-Hito H0 (inicio). Pendiente: versiones exactas y URLs de despliegue.
+App 1 terminada y desplegada en Vercel. Pendiente: App 2, ERS (`plantillaERS.md`), despliegue en AWS/Docker (`infra/`) y presentación.
