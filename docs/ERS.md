@@ -80,7 +80,7 @@ flowchart TB
 
     subgraph FRONT["Frontend - Vue y Tailwind"]
         F["App.vue: Formulario y resultados"]
-        D["data.js: Objetos y encantamientos"]
+        D["Listas de objetos y encantamientos en App.vue"]
         D -.-> F
     end
 
@@ -168,9 +168,9 @@ El usuario podrá elegir un objeto y entre 1 y 8 encantamientos con sus niveles 
 
 #### RF-02. Validar la selección
 
-El backend comprobará que los encantamientos existan, que sus niveles sean correctos y que se puedan aplicar al objeto. También rechazará encantamientos repetidos o incompatibles entre sí.
+El backend comprobará que los encantamientos existan, que sus niveles sean correctos y que se puedan aplicar al objeto. También rechazará encantamientos repetidos o incompatibles entre sí. Solo aceptará los nombres de las listas y niveles enteros, sin texto libre ni campos adicionales, aunque la petición se envíe sin usar el formulario.
 
-**Comprobación:** una combinación de Filo y Castigo, o un encantamiento de botas en una espada, produce un error sin consultar a la IA.
+**Comprobación:** una combinación de Filo y Castigo, o un encantamiento de botas en una espada, produce un error sin consultar a la IA. Lo mismo ocurre si se intenta introducir una instrucción en el objeto, en un encantamiento o en un campo adicional.
 
 #### RF-03. Consultar a la IA
 
@@ -201,7 +201,7 @@ Si hay datos incorrectos, falla la conexión o la IA no responde, se mostrará u
 | ID | Requisito | Cómo lo comprobaremos |
 |---|---|---|
 | RNF-01 | La consulta tendrá un tiempo máximo de espera configurado. | Simular una IA que no contesta y comprobar que se devuelve un error de tiempo agotado. El valor por defecto actual es 20 segundos. |
-| RNF-02 | La aplicación no guardará las consultas ni expondrá las claves privadas. | Revisar el código, la configuración, los registros y el almacenamiento del navegador. |
+| RNF-02 | La aplicación no guardará las consultas ni expondrá las claves privadas. Los registros solo incluirán códigos de error y estados técnicos. | Revisar el código, la configuración, los registros y el almacenamiento del navegador. |
 | RNF-03 | La página debe poder utilizarse en móvil y ordenador, también con teclado. | Probar el formulario y el resultado en distintos tamaños de pantalla y usando Tab. |
 | RNF-04 | Debe funcionar en los navegadores previstos. | Probar el recorrido completo en Chrome y Edge cuando esté desplegada. |
 
@@ -305,7 +305,7 @@ Para verificar el funcionamiento, relacionamos cada parte con una prueba sencill
 
 | Requisitos | Prueba | Resultado esperado |
 |---|---|---|
-| RF-01 y RF-02 | Enviar una selección válida y otra con encantamientos incompatibles. | La válida continúa y la incorrecta se rechaza antes de llamar a la IA. |
+| RF-01 y RF-02 | Enviar selecciones válidas de 1 y 8 encantamientos, una incompatible y otra que intente introducir instrucciones. | La válida continúa y la incorrecta se rechaza antes de llamar a la IA. |
 | RF-03 | Simular una petición al proveedor y contar llamadas. | Una sola consulta por envío válido. |
 | RF-04 | Probar un plan correcto y otro con libros repetidos o suma incorrecta. | Se acepta el primero y se rechaza el segundo. |
 | RF-05 | Mostrar una respuesta y volver a consultar. | El resultado aparece en la misma pantalla, sin historial. |
@@ -313,7 +313,7 @@ Para verificar el funcionamiento, relacionamos cada parte con una prueba sencill
 | RNF-02 | Revisar código, configuración y registros. | No hay claves expuestas ni datos funcionales guardados. |
 | RNF-03 y RNF-04 | Probar con teclado, móvil, Chrome y Edge. | La interfaz se puede usar correctamente. |
 
-Según la ERS anterior, se habían superado **46 pruebas del backend** en una ejecución local. No se han vuelto a ejecutar para preparar este documento. Esas pruebas no demuestran por sí solas que el orden sea el más barato ni que la conexión real con la IA y el despliegue estén terminados.
+Se han ampliado las pruebas del backend para comprobar las nuevas incompatibilidades, los intentos de introducir instrucciones y que los registros no guarden contenido de las consultas. Las pruebas usan respuestas simuladas, sin gastar créditos de OpenRouter. Esas pruebas no demuestran por sí solas que el orden sea el más barato ni que la conexión real con la IA y el despliegue estén terminados.
 
 ## 9. Cuestiones pendientes
 
@@ -324,7 +324,7 @@ Según la ERS anterior, se habían superado **46 pruebas del backend** en una ej
 | PEN-03 | Concretar la versión de Minecraft Java y los objetos y encantamientos incluidos en la entrega. |
 | PEN-04 | Confirmar el tiempo máximo de espera que se usará al publicar. |
 | PEN-05 | Conseguir y documentar una respuesta correcta de OpenRouter real. La última prueba conocida devolvió un error 429 del proveedor. |
-| PEN-06 | Revisar los registros del backend para que no guarden entradas, respuestas o datos sensibles. |
+| PEN-06 | Corregido en el código local: los registros no incluyen entradas ni respuestas. Se ha añadido una prueba para comprobarlo. |
 | PEN-07 | Desactivar las respuestas ficticias en el frontend de entrega y comprobar todo el recorrido real. |
 | PEN-08 | Publicar frontend y backend en Vercel y probar la aplicación publicada. |
 | PEN-09 | Guardar capturas y resultados de las pruebas finales y registrar el uso de IA en el trabajo. |

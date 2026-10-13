@@ -45,7 +45,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         try:
             return validate_plan(plan, data)
         except (ValueError, TypeError) as exc:
-            logging.getLogger("uvicorn.error").warning("IA: el plan no pasa la validación: %s | plan=%.600s", exc, plan)
+            logging.getLogger("uvicorn.error").warning("IA: plan rechazado (RESPUESTA_INVALIDA)")
             raise AIError("RESPUESTA_INVALIDA", 502) from exc
 
     return application
