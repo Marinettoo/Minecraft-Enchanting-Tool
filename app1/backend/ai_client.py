@@ -2,21 +2,70 @@
 
 import asyncio
 import json
+import logging
+import re
 
 import httpx
 
 from config import Settings
 from schemas import ProcessRequest
 
+log = logging.getLogger("uvicorn.error")
 API_URL = "https://openrouter.ai/api/v1/chat/completions"
 SYSTEM_PROMPT = """Propón el orden de combinaciones de yunque de menor coste para
 Minecraft Java. Supón objeto nuevo sin encantamientos ni trabajos previos y un
 libro nuevo por cada encantamiento al nivel solicitado. No renombres ni repares.
 Solo combina objeto+libro o libro+libro. Considera penalizaciones por trabajos
 previos y el límite de 40 niveles de supervivencia. No añadas encantamientos.
+Cómo calcular el coste de CADA combinación en el yunque (Minecraft Java):
+coste = penalización_izquierda + penalización_derecha + coste_encantamientos.
+- Cada objeto o libro tiene un contador n de veces que ha pasado por el yunque
+  (objeto y libros nuevos: n=0). Su penalización es 2^n - 1 (n=0 -> 0, n=1 -> 1,
+  n=2 -> 3, n=3 -> 7, n=4 -> 15, n=5 -> 31).
+- Al combinar, el resultado tiene n = max(n_izquierda, n_derecha) + 1.
+- coste_encantamientos = suma de (nivel x multiplicador) de TODOS los
+  encantamientos que lleva el elemento de la derecha (si es un libro o un libro
+  ya combinado, se usa el multiplicador de libro). Los encantamientos que ya
+  tiene el elemento de la izquierda no se cobran.
+- Multiplicadores de libro (por nombre de encantamiento): sharpness 1, smite
+  1, bane_of_arthropods 1, knockback 1, fire_aspect 2, looting 2,
+  sweeping_edge 2, efficiency 1, fortune 2, silk_touch 4, protection 1,
+  fire_protection 1, blast_protection 2, projectile_protection 1, thorns 4,
+  respiration 2, aqua_affinity 2, feather_falling 1, depth_strider 2,
+  frost_walker 2, soul_speed 4, swift_sneak 4, power 1, punch 2, flame 2,
+  infinity 4, multishot 2, piercing 1, quick_charge 1, loyalty 1, riptide 2,
+  channeling 4, impaling 2, luck_of_the_sea 2, lure 2, unbreaking 1, mending
+  2, binding_curse 4, vanishing_curse 4.
+- Si una combinación cuesta 40 niveles o más, en supervivencia sale "Demasiado
+  caro": evítala y, si es inevitable, avísalo en advertencias.
+Estrategia: cada paso con el objeto aumenta su n y encarece todo lo posterior, así
+que combina primero los libros entre sí formando un árbol equilibrado (libro+libro)
+y aplica al objeto pocos libros ya combinados. Los encantamientos caros (nivel x
+multiplicador alto) conviene incorporarlos en los últimos pasos, porque se
+vuelven a cobrar cada vez que el libro que los contiene se combina de nuevo.
+Ejemplo resuelto. Objeto: arco. libro_1 = Infinidad 1 (1x4 = 4), libro_2 =
+Irrompibilidad 3 (3x1 = 3), libro_3 = Poder 1 (1x1 = 1).
+Paso 1: objeto + libro_1 = 0 + 0 + 4 = 4 (el objeto pasa a n=1).
+Paso 2: libro_2 + libro_3 = 0 + 0 + 1 = 1 (el libro combinado tiene n=1).
+Paso 3: paso_1 + paso_2 = (2^1-1) + (2^1-1) + (3+1) = 1 + 1 + 4 = 6.
+Total = 4 + 1 + 6 = 11. Aplicar los libros uno a uno al objeto saldría peor
+(en este caso 12). Compara siempre varias formas de agrupar antes de elegir.
+JSON de ese ejemplo (fíjate: "objeto" aparece UNA sola vez; después, el objeto con
+lo que ya lleva es paso_N, y cada libro o paso se usa una única vez):
+{"resultado":{"pasos":[{"orden":1,"izquierda":"objeto","derecha":"libro_1",
+"coste_niveles":4},{"orden":2,"izquierda":"libro_2","derecha":"libro_3",
+"coste_niveles":1},{"orden":3,"izquierda":"paso_1","derecha":"paso_2",
+"coste_niveles":6}],"coste_total_niveles":11,"advertencias":[]}}
+Si solo hubiera un encantamiento sería un único paso: objeto + libro_1. Con N
+encantamientos hay siempre exactamente N pasos y el último paso contiene todo.
+Calcula cada paso con estas fórmulas y comprueba que coste_total_niveles es la
+suma exacta de los costes.
 Devuelve exclusivamente JSON, sin Markdown, con esta forma:
 {"resultado":{"pasos":[{"orden":1,"izquierda":"objeto","derecha":"libro_1",
 "coste_niveles":2}],"coste_total_niveles":2,"advertencias":[]}}.
+IMPORTANTE: en izquierda y derecha usa SOLO las referencias literales objeto,
+libro_1, libro_2..., paso_1, paso_2...; nunca escribas el nombre del objeto (por
+ejemplo wooden_axe) ni nombres de encantamientos, y no reutilices una referencia.
 Referencias: objeto es el objeto inicial; libro_1, libro_2, etc. corresponden al
 orden de encantamientos de la entrada; paso_1, paso_2, etc. son resultados de
 pasos anteriores. Cada recurso se consume una sola vez. El objeto o el resultado
@@ -58,18 +107,27 @@ async def generate_plan(request: ProcessRequest, settings: Settings) -> object:
                     "messages": [{"role": "system", "content": SYSTEM_PROMPT},
                                  {"role": "user", "content": request.model_dump_json()}],
                     "stream": False,
-                    "max_tokens": 2500,
+                    "temperature": 0,
+                    "reasoning": {"enabled": False},
                     "provider": {"allow_fallbacks": False},
                 })
                 response.raise_for_status()
     except (TimeoutError, httpx.TimeoutException) as from_error:
         raise AIError("IA_TIMEOUT", 504) from from_error
     except httpx.HTTPError as exc:
+        resp = getattr(exc, "response", None)
+        log.warning("IA: fallo de OpenRouter (%s): %.400s", resp.status_code if resp is not None else type(exc).__name__,
+                    resp.text if resp is not None else exc)
         raise AIError("IA_NO_DISPONIBLE", 502) from exc
     try:
         choice = response.json()["choices"][0]
+        content = choice["message"].get("content") or ""
         if choice.get("finish_reason") != "stop":
+            log.warning("IA: respuesta incompleta (finish_reason=%s): %.300s", choice.get("finish_reason"), content)
             raise ValueError("Respuesta incompleta")
-        return json.loads(choice["message"]["content"])
+        # Algunos modelos envuelven el JSON en un bloque ```json ... ```
+        content = re.sub(r"^\s*```(?:json)?\s*|\s*```\s*$", "", content)
+        return json.loads(content)
     except (ValueError, TypeError, KeyError, IndexError) as exc:
+        log.warning("IA: respuesta no utilizable (%s): %.500s", exc, response.text)
         raise AIError("RESPUESTA_INVALIDA", 502) from exc
