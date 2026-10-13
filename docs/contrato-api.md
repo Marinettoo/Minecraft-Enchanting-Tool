@@ -81,7 +81,7 @@ Como el usuario no escribe texto libre sino que elige de listas, la validación 
 | Encantamientos por petición | De 1 a 8 |
 | Repetir un encantamiento | No permitido |
 | Nivel | De 1 al máximo del encantamiento (tabla de abajo) |
-| Tiempo máximo de espera a la IA | 20 segundos (a ajustar tras probar) |
+| Tiempo máximo de espera a la IA | 60 segundos (ajustado tras probar con modelos gratuitos) |
 | Texto libre | Ninguno: todo se elige de listas |
 
 Objetos permitidos (propuesta inicial, se puede ampliar): espada, hacha, pico, pala, azada, casco, pechera, grebas, botas, arco, ballesta, caña de pescar, tridente. En el código se escriben en inglés con el material (por ejemplo `diamond_sword`, `netherite_helmet`).
@@ -148,16 +148,16 @@ Para trabajar en paralelo:
 - **Frontend:** mientras el backend no esté listo, se construye contra una respuesta falsa con la forma de la sección 3 y otra con la forma de la sección 4.
 - **Cambios:** cualquier cambio de campos o códigos se anota aquí y se avisa al compañero antes de tocar código.
 
-Idea para comentar con el profesor: como la IA puede calcular mal los niveles, el backend podría recalcular el coste del orden que devuelva y rechazar la respuesta si no cuadra (error RESPUESTA\_INVALIDA). Sigue siendo una sola llamada a la IA.
+Decisión tomada: el orden y los costes los calcula **exclusivamente la IA**. El backend no recalcula ni corrige el resultado; solo comprueba que tiene la estructura del contrato, que las referencias entre pasos son coherentes y que la suma de costes cuadra (si no, responde RESPUESTA\_INVALIDA). Para que la IA acierte, el prompt incluye las reglas de coste del yunque; ver `docs/uso-ia.md`.
 
 ## 7. Decisiones pendientes
 
 | Decisión | Propuesta | Quién la cierra |
 | --- | --- | --- |
 | Edición de Minecraft | Java (se asume en este documento) | Los dos |
-| Proveedor y modelo de IA | OpenRouter con un modelo gratuito (nombre exacto por decidir). Sin Dify: FastAPI llama directamente a OpenRouter | Los dos |
-| Vue o React | Vue | Los dos |
-| Tiempo máximo de espera | 20 segundos | Backend |
+| Proveedor y modelo de IA | OpenRouter con `poolside/laguna-s-2.1:free` (cerrada). Sin Dify: FastAPI llama directamente a OpenRouter | Los dos |
+| Vue o React | Vue (cerrada) | Los dos |
+| Tiempo máximo de espera | 60 segundos (cerrada) | Backend |
 | Lista exacta de objetos y encantamientos | La de la sección 5 | Los dos |
-| Recalcular el coste en el backend | Preguntar al profesor | Los dos |
+| Recalcular el coste en el backend | No: lo calcula solo la IA (cerrada) | Los dos |
 | Créditos y cuentas de la IA | Preguntar al profesor | Los dos |
