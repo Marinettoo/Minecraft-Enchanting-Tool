@@ -38,7 +38,6 @@ Nuestra idea es crear una web en la que el jugador seleccione un objeto y los en
 | OBJ-02 | Evitar combinaciones que no sean válidas. | Se rechazan los encantamientos incompatibles o que no correspondan al objeto. |
 | OBJ-03 | Conectar la web con el backend y una API de IA. | Una petición válida llega a la IA y su respuesta se muestra en pantalla. |
 
-**Importante:** queremos encontrar el orden de menor coste posible, pero la versión actual utiliza una IA para proponerlo. Todavía falta demostrar que el coste calculado sea exacto y que el orden elegido sea realmente el más barato.
 
 ### 1.3. Alcance
 
@@ -143,8 +142,7 @@ La web se podrá utilizar desde un navegador de ordenador o móvil. Para hacer c
 
 Dependemos de que OpenRouter funcione y de tener una clave con acceso al modelo elegido. Si el servicio falla, la aplicación debe mostrar un error en lugar de inventarse una respuesta.
 
-También partimos de que el objeto no tiene encantamientos anteriores y que los libros son nuevos. Queda pendiente fijar la versión exacta de Minecraft Java y revisar el catálogo de objetos y encantamientos que tendrá la entrega.
-
+También partimos de que el objeto no tiene encantamientos anteriores y que los libros son nuevos. 
 ## 3. Requisitos funcionales
 
 ### 3.1. Lista de requisitos
@@ -215,7 +213,7 @@ Para simplificar el problema, representamos los elementos del juego mediante dat
 |---|---|
 | Entrada | Objeto y lista de encantamientos, cada uno con su nivel. |
 | Resultado | Pasos de combinación, coste de cada paso, coste total y advertencias. |
-| Error | Código y mensaje que explican por qué no se ha podido completar la consulta. |
+| Error | Código y mensaje que explican por qué no se ha podido realizar  la consulta. |
 
 Esta representación nos permite trabajar con los encantamientos sin tener que reproducir el juego. La aplicación solo utiliza los datos durante la consulta y no los guarda en una base de datos.
 
@@ -297,7 +295,29 @@ FIN
 
 ### 7.3. Diagrama de flujo
 
-**[INSERTAR GRÁFICA: diagrama de flujo del pseudocódigo anterior. Debe tener las decisiones «¿Datos válidos?», «¿La IA responde?» y «¿Respuesta válida?», con sus caminos de resultado o error.]**
+Este diagrama muestra las decisiones del pseudocódigo y cuándo se presenta el resultado o un mensaje de error.
+
+```mermaid
+flowchart TD
+    INICIO([Inicio]) --> ENTRADA["Recoger objeto y encantamientos"]
+    ENTRADA --> DATOS{"¿Datos válidos?"}
+
+    DATOS -->|No| ERROR_DATOS["Mostrar error de validación"]
+    DATOS -->|Sí| CONSULTA["Consultar a la IA"]
+    CONSULTA --> IA{"¿La IA responde sin errores?"}
+
+    IA -->|No| ERROR_IA["Mostrar error de consulta o de tiempo de espera"]
+    IA -->|Sí| COMPROBAR["Comprobar los pasos y la suma de costes"]
+    COMPROBAR --> RESPUESTA{"¿Respuesta válida?"}
+
+    RESPUESTA -->|No| ERROR_RESPUESTA["Mostrar error de respuesta"]
+    RESPUESTA -->|Sí| RESULTADO["Mostrar orden, costes y advertencias"]
+
+    ERROR_DATOS --> FIN([Fin])
+    ERROR_IA --> FIN
+    ERROR_RESPUESTA --> FIN
+    RESULTADO --> FIN
+```
 
 ## 8. Pruebas y comprobaciones
 
@@ -311,7 +331,7 @@ Para verificar el funcionamiento, relacionamos cada parte con una prueba sencill
 | RF-05 | Mostrar una respuesta y volver a consultar. | El resultado aparece en la misma pantalla, sin historial. |
 | RF-06 y RNF-01 | Simular fallo de la IA y tiempo agotado. | Aparece un error y se permite repetir la consulta. |
 | RNF-02 | Revisar código, configuración y registros. | No hay claves expuestas ni datos funcionales guardados. |
-| RNF-03 y RNF-04 | Probar con teclado, móvil, Chrome y Edge. | La interfaz se puede usar correctamente. |
+| RNF-03 y RNF-04 | Probar con, móvil, Chrome y Edge. | La interfaz se puede usar correctamente. |
 
 Se han ampliado las pruebas del backend para comprobar las nuevas incompatibilidades, los intentos de introducir instrucciones y que los registros no guarden contenido de las consultas. Las pruebas usan respuestas simuladas, sin gastar créditos de OpenRouter. Esas pruebas no demuestran por sí solas que el orden sea el más barato ni que la conexión real con la IA y el despliegue estén terminados.
 
@@ -319,16 +339,7 @@ Se han ampliado las pruebas del backend para comprobar las nuevas incompatibilid
 
 | ID | Pendiente |
 |---|---|
-| PEN-01 | Completar los datos del docente y del grupo y revisar el documento entre los integrantes. |
-| PEN-02 | Comprobar si la propuesta realmente consigue el menor coste o corregir esa promesa en el contrato y la interfaz. |
-| PEN-03 | Concretar la versión de Minecraft Java y los objetos y encantamientos incluidos en la entrega. |
-| PEN-04 | Confirmar el tiempo máximo de espera que se usará al publicar. |
-| PEN-05 | Conseguir y documentar una respuesta correcta de OpenRouter real. La última prueba conocida devolvió un error 429 del proveedor. |
-| PEN-06 | Corregido en el código local: los registros no incluyen entradas ni respuestas. Se ha añadido una prueba para comprobarlo. |
-| PEN-07 | Desactivar las respuestas ficticias en el frontend de entrega y comprobar todo el recorrido real. |
-| PEN-08 | Publicar frontend y backend en Vercel y probar la aplicación publicada. |
-| PEN-09 | Guardar capturas y resultados de las pruebas finales y registrar el uso de IA en el trabajo. |
-
+| PEN-01 |   |
 ## 10. Revisión y conformidad
 
 ### 10.1. Comprobaciones antes de entregar
