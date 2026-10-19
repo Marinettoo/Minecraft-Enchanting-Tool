@@ -121,9 +121,9 @@ queda pendiente contrastarla en la versión concreta de Minecraft que acordéis.
 La consulta a Minecraft Wiki durante la preparación no fue accesible; no se
 presenta como verificada. No se añaden objetos recientes por inferencia.
 
-Con las listas actuales el máximo compatible es 7 encantamientos (espada).
-El límite de 8 se conserva para respetar el contrato, aunque no hay una petición
-válida con 8 distintos en esta selección inicial.
+Las pruebas incluyen una espada con 8 encantamientos compatibles: Filo,
+Empuje, Aspecto ígneo, Botín, Filo barredor, Irrompibilidad, Reparación y
+Maldición de desaparición.
 
 ## Qué se comprueba de la IA
 
@@ -139,6 +139,18 @@ Esto sigue pendiente en vuestro contrato (consulta al profesor). La respuesta
 siempre incluye esta limitación en `advertencias`. Un plan estructuralmente
 correcto todavía puede tener costes inventados por la IA. Por tanto, la promesa
 de «menor coste» requiere validación adicional antes de considerarse demostrada.
+
+## Entrada cerrada y registros
+
+Se rechazan nombres ajenos al catálogo, campos extra y niveles que no sean
+enteros válidos, aunque se envíen directamente a la API. Se vuelve a validar
+antes de construir el mensaje para OpenRouter. El prompt del sistema es fijo;
+el mensaje del usuario contiene solo el JSON validado, nunca instrucciones
+libres ni secretos. No se ejecuta código de la respuesta.
+
+Los registros de la integración contienen únicamente códigos de error y estados
+técnicos. No incluyen el cuerpo del proveedor, el plan, la entrada ni el texto
+de excepciones que pudiera contener esos datos.
 
 ## Archivos
 
@@ -161,6 +173,11 @@ Se simula tanto la función de IA como el transporte HTTP (`httpx.MockTransport`
 éxito, una sola llamada, entrada inválida sin llamada, límites, incompatibilidades,
 respuesta corrupta, consumo de libros, errores HTTP/conexión, timeout de HTTP y
 deadline total, CORS y configuración ausente. No requieren créditos ni claves.
+
+Se han añadido pruebas de 8 encantamientos compatibles, de las nuevas
+incompatibilidades, de intentos de inyección y de registros sin contenido.
+Se conserva la validación parcial de costes y el tratamiento anterior de
+las respuestas del proveedor.
 
 Verificación realizada el 8 de octubre de 2026: **46 pruebas superadas** con
 Python 3.12.14. Se utilizó el Python disponible en el runtime local de Codex
