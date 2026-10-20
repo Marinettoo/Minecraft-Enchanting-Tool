@@ -19,3 +19,6 @@ dist/
 
 # Sistema
 .DS_Store
+
+# Guía personal de Spec Kit
+/output/pdf/guia-speckit-app2.pdf

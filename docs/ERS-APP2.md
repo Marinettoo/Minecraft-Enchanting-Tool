@@ -82,7 +82,7 @@ Quedan fuera del alcance:
 | FUE-06 | Decisiones del equipo para la App 2 | 19/10/2026 | Vue, OpenRouter con `poolside/laguna-s-2.1:free`, Codex y uso de las listas más completas. |
 | FUE-07 | Configuración inicial de Spec Kit | 1.2.1, integración Codex y scripts PowerShell | [init-options.json](../app2/.specify/init-options.json) |
 
-Los cambios se reflejarán en los documentos afectados antes de modificar el comportamiento. Las diferencias con el contrato inicial se recogen en PEN-02.
+Los cambios se reflejarán en los documentos afectados antes de modificar el comportamiento. El apartado 8 del contrato concreta las condiciones de App 2.
 
 ## 2. Descripción general del sistema
 
@@ -371,7 +371,7 @@ El diseño se concretará en el plan; las capturas de App 1 solo servirán de re
 | INT-02 | FastAPI y OpenRouter | Datos validados para solicitar el orden; propuesta devuelta por el modelo elegido. | API del proveedor por HTTPS, con clave privada backend. | 502 por fallo o respuesta inválida; 504 por tiempo agotado. |
 | INT-03 | Aplicación y Clerk | Acceso, token y datos públicos necesarios para comprobarlo. No se envían las consultas de encantamientos a Clerk. | SDK y mecanismo oficial de verificación compatibles con Vue y FastAPI. | Si no puede verificarse el acceso, no se procesa la consulta. |
 
-Se conserva el contrato base FUE-04, con las correcciones de PEN-02 y el token en el encabezado.
+Se conserva el contrato base FUE-04, con las condiciones de App 2 de su apartado 8 y el token en el encabezado.
 
 | HTTP | Código de la aplicación | Cuándo se utiliza | Llamadas a la IA |
 |---|---|---|---|
@@ -477,7 +477,7 @@ La comparativa usará entradas y criterios comunes. Se registrarán tiempos, cal
 | ID | Duda o decisión pendiente | Requisitos afectados | Responsable | Cuándo se resuelve | Resolución |
 |---|---|---|---|---|---|
 | PEN-01 | Completar grupo y nombre del docente. | Datos del documento | Equipo | Antes de entregar. | Pendiente. |
-| PEN-02 | Actualizar el contrato con las listas del anexo A, la advertencia de costes estimados y una representación de pasos que permita comprobar los elementos intermedios. El formulario actual de App 1 ofrece menos opciones. | RF-02, RF-03 y RF-05 | Equipo | Antes de cerrar la especificación y preparar casos comunes. | La lista de referencia será la del backend por decisión del equipo; queda sincronizar los documentos y revisar las diferencias de App 1. |
+| PEN-02 | Concretar en el contrato las condiciones de App 2. | RF-02, RF-03 y RF-05 | Equipo | Especificación. | Resuelto: apartado 8 del contrato, con las listas del anexo A, costes estimados, espera de 60 segundos y referencias objeto, libro_N y paso_N. Se mantiene el criterio de pasos ya utilizado en App 1. |
 | PEN-03 | Comprobar disponibilidad, formato de respuesta y acceso al modelo elegido. | RF-04 y RNF-01 | Equipo | Antes de cerrar el plan técnico. | Modelo confirmado: poolside/laguna-s-2.1:free. Prueba real pendiente. |
 | PEN-04 | Configurar Clerk y comprobar que el método de acceso funciona dentro de la única pantalla con Vue. | RF-01, RNF-02 e INT-03 | Equipo | Antes de implementar la integración. | Pendiente. |
 | PEN-05 | Confirmar cuentas, región, presupuesto y nombre público para HTTPS en EC2; concretar las URLs de Vercel. | OBJ-05, RNF-05 y DEP-03 | Equipo; consultar al docente cuando corresponda | Antes de crear los recursos o publicar. | Pendiente; no se presupone gratuidad. |
@@ -503,8 +503,7 @@ La comparativa usará entradas y criterios comunes. Se registrarán tiempos, cal
 
 | Revisor y rol | Versión | Fecha | Resultado | Observaciones |
 |---|---|---|---|---|
-| Jesús Pérez Marinetto, integrante | 0.1 | 19/10/2026 | Conforme | Requisitos aceptados como base para continuar con Spec Kit. |
-| Hugo Cáceres Martín, integrante | 0.1 | Pendiente | Pendiente de revisión | Revisión cruzada del contrato, listas y comprobaciones. |
+| Hugo Cáceres Martín, integrante | 0.1 | 19/10/2026 | Conforme | Requisitos aceptados como base para continuar con Spec Kit. |
 
 Documento preparado con apoyo de IA. Las decisiones del proyecto corresponden al equipo.
 
@@ -512,7 +511,7 @@ Documento preparado con apoyo de IA. Las decisiones del proyecto corresponden al
 
 ### Anexo A. Objetos, encantamientos y compatibilidades
 
-Por decisión del equipo, la referencia será la lista del backend, más completa que la del formulario actual. Las siguientes opciones deberán coincidir en ambas capas de App 2.
+Por decisión del equipo, la referencia es la lista del backend de App 1. Las siguientes opciones deberán coincidir en ambas capas de App 2.
 
 **Objetos:**
 

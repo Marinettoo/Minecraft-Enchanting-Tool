@@ -161,3 +161,43 @@ Decisión tomada: el orden y los costes los calcula **exclusivamente la IA**. El
 | Lista exacta de objetos y encantamientos | La de la sección 5 | Los dos |
 | Recalcular el coste en el backend | No: lo calcula solo la IA (cerrada) | Los dos |
 | Créditos y cuentas de la IA | Preguntar al profesor | Los dos |
+
+## 8. Condiciones de App 2
+
+Para App 2 se mantiene la forma de petición y respuesta de este contrato, con las siguientes condiciones de su ERS y constitución. Este apartado concreta lo que debe cumplir la nueva implementación.
+
+### Acceso y entrada
+
+- La ruta es `POST /api/procesar`. El token de sesión de Clerk se envía en `Authorization: Bearer ...`, fuera del cuerpo de la petición.
+- Antes de validar la selección se comprueban firma, emisor, caducidad y las condiciones de audiencia u origen que correspondan. Si no se puede verificar la sesión, se responde 401 con `NO_AUTORIZADO`, sin consultar a IA.
+- Las listas cerradas son los 58 objetos y 39 encantamientos del anexo A de [ERS-APP2.md](ERS-APP2.md), con sus niveles, materiales y compatibilidades. Las opciones del formulario y las del backend deben coincidir.
+- Solo se admiten `objeto` y `encantamientos`, con `nombre` y `nivel` en cada elemento. Se rechazan campos adicionales, datos ausentes, JSON incorrecto, opciones desconocidas, duplicados e incompatibilidades. Los niveles deben ser enteros: no se admiten decimales, booleanos ni textos convertidos a números.
+- El objeto y los libros son nuevos, sin trabajos anteriores de yunque. Cada libro lleva un encantamiento al nivel solicitado.
+
+### Identificación y comprobación de los pasos
+
+La respuesta solicitada a la IA utiliza estas referencias en `izquierda` y `derecha`:
+
+| Referencia | Qué representa |
+| --- | --- |
+| `objeto` | El objeto inicial. |
+| `libro_1`, `libro_2`, etc. | Los libros, en el mismo orden que los encantamientos de la petición. |
+| `paso_1`, `paso_2`, etc. | El resultado de una combinación anterior. |
+
+Cada paso consume dos elementos distintos que estén disponibles y produce uno nuevo. No se puede reutilizar un elemento consumido ni usar un paso antes de crearlo. Se permiten libro con libro y objeto con libro; el objeto o el resultado que lo contiene va siempre a la izquierda. Con N libros debe haber N pasos consecutivos desde 1. Al terminar debe quedar un único resultado con el objeto y todos los encantamientos solicitados.
+
+Por ejemplo, con dos libros se puede combinar `libro_1` con `libro_2` en el paso 1 y después `objeto` con `paso_1` en el paso 2. La comprobación sigue qué contiene cada resultado sin depender de cómo lo haya descrito la IA.
+
+Tras validar las referencias, el backend las transforma en nombres comprensibles para la pantalla, manteniendo los campos de la sección 3. Un resultado intermedio se identifica como «Resultado del paso 1», por ejemplo. Esta comprobación no recalcula ni corrige los costes del juego.
+
+Los costes por paso y el total deben ser enteros no negativos. El total debe coincidir con la suma. Una propuesta vacía, ilegible, incompleta o incoherente se rechaza entera con 502 y `RESPUESTA_INVALIDA`, sin una segunda consulta a IA.
+
+### Advertencias y errores
+
+- Todo resultado debe indicar que sus costes son estimados y que no se ha comprobado que sean exactos ni mínimos.
+- Si algún paso alcanza 40 niveles o más, se añade la advertencia de que es demasiado caro en supervivencia. No se activa este aviso con 39 niveles.
+- La espera al proveedor se limita a 60 segundos. Al agotarse se responde 504 con `IA_TIMEOUT`.
+- Un fallo del proveedor produce 502 con `IA_NO_DISPONIBLE`. Una selección incorrecta produce 422 con `VALIDACION`.
+- Los errores mantienen la forma `error.codigo` y `error.mensaje` de la sección 4, sin secretos ni detalles privados.
+- Solo se realiza una llamada por envío autorizado y válido a `poolside/laguna-s-2.1:free`. No hay reintentos automáticos ni cambios automáticos de modelo.
+- Los despliegues públicos utilizan HTTPS. El token de sesión no se envía a la IA. Las claves privadas no se incluyen en los datos, las instrucciones ni el resultado de la consulta.

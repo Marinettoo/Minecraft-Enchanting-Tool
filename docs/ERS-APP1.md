@@ -11,7 +11,7 @@
 | Docente y grupo | Pendiente de completar |
 | Fecha | 13/10/2026 |
 | Versión | 0.2 |
-| Estado | Borrador pendiente de revisión |
+| Estado | Documentación de App 1 |
 
 ### Historial de cambios
 
@@ -352,7 +352,7 @@ Se han ampliado las pruebas del backend para comprobar las nuevas incompatibilid
 
 ### 10.2. Revisión
 
-**Estado:** pendiente de revisión final por los integrantes. No se indica aprobación del docente porque todavía no consta.
+La revisión comprueba que los requisitos coinciden con el comportamiento de App 1 y con las pruebas realizadas.
 
 ## Anexos
 
