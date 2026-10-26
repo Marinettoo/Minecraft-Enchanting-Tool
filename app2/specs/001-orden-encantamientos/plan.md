@@ -21,6 +21,7 @@ El flujo será Vue → FastAPI → OpenRouter → FastAPI → Vue. No guardaremo
 | Modelo | `poolside/laguna-s-2.1:free`, a través de OpenRouter. |
 | Ejecución | Uvicorn en local y Docker. Node 22.12 o posterior compatible con las dependencias elegidas para compilar el frontend. |
 | Pruebas | pytest y servicios simulados; revisión manual del recorrido, teclado y tamaños de pantalla. |
+| Pruebas de interfaz | Vitest, Vue Test Utils y jsdom para simular errores, tiempos de espera, doble envío y cierre de sesión. |
 | Almacenamiento | Solo datos en memoria durante la consulta. Ninguna base de datos ni historial. |
 | Entornos | Local, frontend y backend en Vercel, Docker local y Docker en EC2 con HTTPS. |
 | Alcance | Una pantalla, un objeto y de 1 a 8 libros. Las opciones son las del anexo A de la ERS. |
@@ -105,13 +106,15 @@ app2/
 
 `data.js` contiene las opciones y los nombres que muestra el formulario. Una prueba comparará sus identificadores, niveles y compatibilidades con los del backend. Las listas son datos fijos, no un catálogo gestionable.
 
+El diseño sigue la referencia visual indicada por el usuario: libro abierto de pergamino, marco marrón, fondo oscuro con estrellas y controles cuadrados. La selección ocupa la página izquierda y el resultado la derecha; en móvil se apilan. El objeto se elige por tipo y material y se envía con el mismo identificador del contrato. Se reutiliza la tipografía Monocraft con su licencia, sin copiar la implementación de App 1. El código de la interfaz y los iconos es propio de App 2.
+
 ## Recorrido técnico
 
 1. El frontend obtiene el token de sesión con Clerk y envía la selección al endpoint protegido.
 2. Una dependencia de FastAPI verifica el token. Solo después se lee y valida la selección. Así una petición sin acceso no alcanza ni la validación funcional ni la IA.
 3. HTTPX envía una sola petición al modelo. Un límite total de 60 segundos controla toda la operación con el proveedor, además de los tiempos de red.
 4. El backend lee el contenido de la respuesta y valida su estructura, referencias y suma. Solo acepta una respuesta terminada correctamente. Puede retirar un bloque Markdown exterior que contenga únicamente JSON; no buscará ni completará JSON entre explicaciones.
-5. Convierte las referencias válidas en nombres comprensibles y añade los avisos de costes estimados y del límite de supervivencia cuando correspondan.
+5. Convierte las referencias válidas en nombres comprensibles y añade el aviso del límite de supervivencia cuando corresponda. La pantalla identifica el coste de cada paso y el total como estimados.
 6. El frontend muestra el resultado como texto. Durante la espera bloquea el envío y la edición de la selección. Al cerrar sesión, cancela la espera local y descarta cualquier respuesta tardía. Esto no genera otra consulta al proveedor.
 
 ## Pruebas previstas

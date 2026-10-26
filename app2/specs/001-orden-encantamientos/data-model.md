@@ -30,7 +30,7 @@ Por ejemplo, combinar `libro_1` y `libro_2` crea `paso_1`, que contiene ambos li
 | `coste_niveles` | Entero no negativo estimado por la IA. |
 | `pasos` | Con N libros debe haber exactamente N pasos. |
 | `coste_total_niveles` | Entero no negativo, igual a la suma de los costes. |
-| `advertencias` | Lista de textos. Siempre se incorpora el aviso de costes estimados; desde 40 niveles por paso se añade el aviso de supervivencia. |
+| `advertencias` | Lista de textos que puede estar vacía. Desde 40 niveles por paso se añade el aviso de supervivencia. Los costes se presentan como estimados en las etiquetas de la pantalla. |
 
 Al terminar debe quedar un solo elemento con el objeto y todos los libros iniciales. Se rechaza la propuesta completa si no se cumple alguna regla. No se recalcula el coste real del juego.
 

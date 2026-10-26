@@ -37,9 +37,7 @@ Código 200, con esta estructura. Los números del ejemplo son ilustrativos.
       }
     ],
     "coste_total_niveles": 5,
-    "advertencias": [
-      "Costes estimados por IA: no se ha comprobado que sean exactos ni mínimos."
-    ]
+    "advertencias": []
   }
 }
 ```

@@ -1,6 +1,28 @@
 # Guía de ejecución y comprobación de App 2
 
-Esta guía se utilizará cuando se creen los archivos descritos en el plan. En esta fase solo existen los documentos de diseño. Los comandos siguientes no son pruebas ya ejecutadas sobre App 2.
+La estructura básica de App 2 ya está creada. El resto de esta guía se completará al implementar el acceso, el formulario, la consulta y los despliegues.
+
+## Base comprobada el 26/10/2026
+
+Se han completado T001 y T002 sobre la base del commit `0a5bacf`. El entorno propio utiliza Python 3.12.14 y la comprobación del frontend se ha hecho con Node 24.21.0 y npm 11.19.0. Las versiones de los paquetes quedan fijadas en los archivos de requisitos y en `package-lock.json`.
+
+En este equipo se ha creado `.venv` con el Python disponible en Codex, porque `py -3.12` no encuentra una instalación. Para repetir la instalación se necesita un Python 3.12 disponible; una vez creado el entorno, los comandos usan su propio ejecutable.
+
+Desde `app2/backend`, el backend básico arranca con:
+
+```powershell
+.\.venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+```
+
+Desde `app2/frontend`, la pantalla inicial arranca con:
+
+```powershell
+npm run dev -- --host 127.0.0.1 --port 5173 --strictPort
+```
+
+Comprobaciones iniciales: dependencias de Python sin conflictos, pytest instalado, frontend compilado y servido con HTTP 200, y arranque correcto de Uvicorn. El backend aún no tiene rutas funcionales, por lo que `/` devuelve 404.
+
+Después se ha comprobado con el usuario el acceso y cierre de sesión de Clerk en la pantalla. Ya existen el formulario de encantamientos y el endpoint de consulta. Hay 118 pruebas de backend y 16 de interfaz superadas con servicios simulados, una comprobación real del cliente de IA con un libro y un recorrido completo desde el navegador confirmado por el usuario. Los resultados y el alcance de cada prueba están en [pruebas-app2.md](../../../docs/pruebas-app2.md).
 
 ## 1. Preparación
 
@@ -54,11 +76,14 @@ npm run dev
 
 Configurar `VITE_CLERK_PUBLISHABLE_KEY` con la clave pública de la instancia y `VITE_API_URL` con `http://localhost:8000`. No incluir claves privadas en variables `VITE_`.
 
-La compilación se comprobará con:
+Las pruebas de interfaz y la compilación se ejecutan con:
 
 ```powershell
+npm test
 npm run build
 ```
+
+Las pruebas de interfaz simulan Clerk y la red, sin iniciar sesiones ni consultar a IA. Para ejecutar toda la batería de pytest también se necesita Node, porque una prueba compara las opciones de JavaScript con las de Python.
 
 Antes de integrar el acceso se probará el componente oficial de Clerk en la única pantalla, con su configuración real. Debe permitir acceder y salir sin añadir rutas de la aplicación. No se guardarán tokens manualmente.
 

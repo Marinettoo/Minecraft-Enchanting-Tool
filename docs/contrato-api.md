@@ -194,7 +194,7 @@ Los costes por paso y el total deben ser enteros no negativos. El total debe coi
 
 ### Advertencias y errores
 
-- Todo resultado debe indicar que sus costes son estimados y que no se ha comprobado que sean exactos ni mínimos.
+- La pantalla identifica los costes mediante las etiquetas «Coste estimado» y «Total estimado».
 - Si algún paso alcanza 40 niveles o más, se añade la advertencia de que es demasiado caro en supervivencia. No se activa este aviso con 39 niveles.
 - La espera al proveedor se limita a 60 segundos. Al agotarse se responde 504 con `IA_TIMEOUT`.
 - Un fallo del proveedor produce 502 con `IA_NO_DISPONIBLE`. Una selección incorrecta produce 422 con `VALIDACION`.
