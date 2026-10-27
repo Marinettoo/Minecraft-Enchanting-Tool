@@ -4,7 +4,7 @@ Preparación del servidor para App2 · MeT — Minecraft Enchanting Tool
 
 **Autores:** Jesús Pérez Marinetto y Hugo Cáceres Martín
 
-![Portada del documento](evidencias/creacion-instancia-aws/p01-01.png)
+![Portada del documento](evidencias/creacion-instancia-aws/portada-aws-app2.png)
 
 [Versión en PDF](creacion-instancia-aws.pdf)
 
