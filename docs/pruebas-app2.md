@@ -64,3 +64,13 @@ Se ha comparado la clave privada real de OpenRouter con el contenido de los arch
 
 Se completa T029. T028 sigue sin marcar porque aún falta la revisión específica en Chrome y Edge. La publicación en Vercel se realizará en otra sesión.
 
+## 27/10/2026. Docker local
+
+Las imágenes se han construido con Docker Desktop 4.97.0, motor Linux 29.9.2 y Compose 5.6.1. Se han validado Compose, Caddy, las variables del backend y sus dependencias dentro de los contenedores.
+
+Hugo ha confirmado el acceso y una consulta real desde `http://localhost:8080`: Pico de hierro con Eficiencia V, Fortuna III e Irrompibilidad III, tres pasos y total estimado de 24 niveles. Tras reiniciar los contenedores ha confirmado otra consulta con Azada de piedra, Eficiencia V y Fortuna III: dos pasos y total estimado de 13 niveles.
+
+La comprobación directa devuelve HTTP 200 para la web y HTTP 401 con `NO_AUTORIZADO` para una petición a `/api/procesar` sin sesión, a través del proxy. No se ha consultado al proveedor en esta comprobación de rechazo. Los contenedores siguen activos y el backend solo está disponible en la red interna.
+
+Se completa T033. Las consultas y el reinicio se han comprobado manualmente con Hugo; los errores de entrada y del proveedor siguen respaldados por las pruebas simuladas anteriores. Las instrucciones están en [despliegue-app2.md](despliegue-app2.md).
+

@@ -1,0 +1,14 @@
+{
+	persist_config off
+}
+
+{$SITE_ADDRESS::80} {
+	handle /api/* {
+		reverse_proxy backend:8000
+	}
+
+	handle {
+		root * /srv
+		file_server
+	}
+}

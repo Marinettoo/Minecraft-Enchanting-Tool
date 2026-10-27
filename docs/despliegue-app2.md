@@ -41,8 +41,72 @@ La revisión del diseño a 360 y 1280 píxeles se ha realizado en el navegador i
 
 La demo local utiliza una instancia Development de Clerk. Al preparar Vercel se comprobará su funcionamiento en el dominio público y se mantendrán coordinadas las claves y el emisor. No se crea una instancia de producción ni se mezclan sus claves con las de desarrollo como parte de esta preparación.
 
-## Docker y AWS
+## Docker local
 
-Se prepararán después de comprobar App 2 en Vercel, según el plan. Antes de crear recursos de AWS se concretarán cuenta, región, presupuesto y nombre público para HTTPS.
+El 27/10/2026 se adelanta Docker por indicación de Hugo mientras el propietario del repositorio prepara la conexión con Vercel. La publicación y sus comprobaciones siguen formando parte de la entrega.
+
+Docker Desktop 4.97.0 utiliza el motor Linux 29.9.2 y Compose 5.6.1.
+
+| Archivo | Para qué sirve |
+| --- | --- |
+| `app2/backend/Dockerfile` | Instala las dependencias de producción y arranca Uvicorn como usuario sin permisos de administrador. |
+| `app2/frontend/Dockerfile` | Compila Vue con Node 24 y copia la web compilada a Caddy. |
+| `.dockerignore` de cada carpeta | Excluye configuración local, claves, pruebas y dependencias instaladas. |
+| `app2/frontend/Caddyfile` | Sirve la web y envía `/api/*` al backend sin quitar el prefijo. |
+| `app2/compose.yaml` | Une los dos servicios, configura la red interna y aplica `restart: unless-stopped`. |
+| `app2/.env.example` | Describe la configuración pública de Docker local. |
+
+### Configuración
+
+Desde `app2/`, copiar `.env.example` como `.env` y completar `VITE_CLERK_PUBLISHABLE_KEY` con la misma clave pública del frontend local. En el equipo de Hugo se ha preparado este archivo a partir de la configuración existente.
+
+Las credenciales de Clerk y OpenRouter se leen de `backend/.env` al arrancar el backend. No se copian a las imágenes ni se pasan como argumentos de compilación. Compose sustituye `ALLOWED_ORIGINS` y `CLERK_AUTHORIZED_PARTIES` por los orígenes locales del puerto 8080.
+
+El frontend se compila con la clave pública de Clerk y `VITE_API_URL` vacío. No necesita conocer la dirección interna del backend. Si cambia la clave pública hay que volver a construir su imagen.
+
+### Arrancar y parar
+
+Desde `app2/`:
+
+```powershell
+docker compose up --build -d
+docker compose ps
+```
+
+Abrir `http://localhost:8080`. Solo Caddy publica puertos, limitados al propio ordenador con `HOST_BIND=127.0.0.1`. El backend se comunica por la red interna de Compose.
+
+Para parar y volver a arrancar conservando las imágenes:
+
+```powershell
+docker compose stop
+docker compose start
+```
+
+Para retirar los contenedores y la red de esta aplicación:
+
+```powershell
+docker compose down
+```
+
+El único volumen propio es `caddy_data`, destinado a los certificados HTTPS cuando se configure un dominio. `/config` usa memoria temporal y se desactiva el guardado automático de configuración de Caddy. No se guardan consultas ni resultados.
+
+Comprobaciones del 27/10/2026:
+
+- `docker compose config --quiet` acepta la configuración.
+- Las dos imágenes se construyen correctamente; el frontend se compila dentro de Linux con sus dependencias fijadas.
+- `caddy validate` acepta el archivo de configuración. En local se usa HTTP de forma intencionada.
+- Un contenedor temporal de backend carga las credenciales y los orígenes del puerto 8080 correctamente. No tiene `/app/.env` y se ejecuta sin ser root.
+- `pip check` no encuentra conflictos dentro de la imagen.
+- Los contenedores de comprobación se han retirado automáticamente. No se han publicado puertos ni realizado consultas a IA en estas comprobaciones.
+
+Hugo ha arrancado ambos servicios desde cero y confirmado el acceso y una consulta real en `http://localhost:8080`: Pico de hierro con Eficiencia V, Fortuna III e Irrompibilidad III, tres pasos y total estimado de 24 niveles.
+
+Después de ejecutar `docker compose restart`, ha confirmado otra consulta: Azada de piedra con Eficiencia V y Fortuna III, dos pasos y total estimado de 13 niveles. Son resultados observados del proveedor, sin comprobar aquí sus costes frente al juego.
+
+La comprobación directa posterior devuelve HTTP 200 en la web y HTTP 401 con `NO_AUTORIZADO` al enviar una selección sin sesión a través de Caddy. Ambos contenedores están activos y el backend no publica un puerto propio. Se completa T033 con estas comprobaciones y la confirmación manual de Hugo. Los casos de entrada incorrecta y fallos del proveedor mantienen las pruebas simuladas documentadas en `pruebas-app2.md`; no se han provocado fallos reales del proveedor en Docker.
+
+## AWS
+
+Antes de crear recursos se concretarán cuenta, región, presupuesto y nombre público para HTTPS. La misma configuración admite el dominio en `SITE_ADDRESS`, puertos 80 y 443, `HOST_BIND=0.0.0.0` y el origen HTTPS en `DOCKER_ALLOWED_ORIGINS`. Esto todavía no crea ni publica recursos de AWS.
 
 Referencias de configuración: [FastAPI en Vercel](https://vercel.com/docs/frameworks/backend/fastapi), [runtime Python](https://vercel.com/docs/functions/runtimes/python) y [duración de funciones](https://vercel.com/docs/functions/configuring-functions/duration).

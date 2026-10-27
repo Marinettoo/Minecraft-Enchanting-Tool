@@ -114,16 +114,18 @@ Configurar las variables de cada capa y los orígenes públicos en CORS y Clerk.
 
 ## 6. Docker local y EC2
 
-Desde `app2/`, preparar `.env` con los valores de ejemplo del futuro archivo de configuración. Además de las variables del backend, Compose utilizará `SITE_ADDRESS` para Caddy y las dos variables públicas del frontend. Para local: `SITE_ADDRESS=:80` y `VITE_API_URL` vacío, de modo que las peticiones usen el mismo origen.
+Desde `app2/`, copiar `.env.example` como `.env` y completar la clave pública de Clerk. El backend utiliza su archivo `backend/.env`, con las mismas credenciales de la ejecución local. Compose sustituye sus orígenes de desarrollo por `DOCKER_ALLOWED_ORIGINS`.
+
+Para local, mantener `SITE_ADDRESS=:80`, `HOST_BIND=127.0.0.1` y `HTTP_PORT=8080`. El frontend se compila con `VITE_API_URL` vacío, de modo que las peticiones usen el mismo origen. Los archivos `.env` quedan fuera de Git y de las imágenes.
 
 ```powershell
 docker compose up --build -d
 docker compose ps
 ```
 
-El frontend se abrirá en el puerto 80 local. Los orígenes de Clerk y CORS deben coincidir con la dirección usada en el navegador. El backend estará disponible para el frontend dentro de la red de Compose.
+Abrir `http://localhost:8080`. Caddy sirve la web y dirige `/api/*` al backend conservando la ruta. El backend no publica su puerto en Windows.
 
-En EC2 se usará el dominio real como `SITE_ADDRESS`, con DNS apuntando a la instancia. Antes de crearla se acordarán cuenta, región, presupuesto y dominio. Abrir 80 y 443; limitar SSH a las IP autorizadas. Verificar HTTPS y la recuperación de ambos servicios tras reiniciar.
+En EC2 se usará el dominio real como `SITE_ADDRESS`, con DNS apuntando a la instancia, `HOST_BIND=0.0.0.0`, `HTTP_PORT=80`, `HTTPS_PORT=443` y el origen HTTPS en `DOCKER_ALLOWED_ORIGINS`. Antes de crearla se acordarán cuenta, región, presupuesto y dominio. Abrir 80 y 443; limitar SSH a las IP autorizadas. Verificar HTTPS y la recuperación de ambos servicios tras reiniciar.
 
 Los secretos del backend se inyectarán al ejecutar. La compilación del frontend solo recibirá las variables públicas. Los archivos locales y las dependencias de desarrollo quedarán fuera de las imágenes.
 

@@ -1,0 +1,32 @@
+name: met-app2
+
+services:
+  backend:
+    build: ./backend
+    env_file:
+      - ./backend/.env
+    environment:
+      ALLOWED_ORIGINS: ${DOCKER_ALLOWED_ORIGINS:-http://localhost:8080,http://127.0.0.1:8080}
+      CLERK_AUTHORIZED_PARTIES: ${DOCKER_ALLOWED_ORIGINS:-http://localhost:8080,http://127.0.0.1:8080}
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_CLERK_PUBLISHABLE_KEY: ${VITE_CLERK_PUBLISHABLE_KEY:?Completa la clave pública de Clerk en app2/.env}
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-:80}
+    ports:
+      - "${HOST_BIND:-127.0.0.1}:${HTTP_PORT:-8080}:80"
+      - "${HOST_BIND:-127.0.0.1}:${HTTPS_PORT:-8443}:443"
+    volumes:
+      - caddy_data:/data
+    tmpfs:
+      - /config
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  caddy_data:
