@@ -136,9 +136,11 @@ Las pruebas de backend simularán tanto Clerk como OpenRouter. El verificador de
 
 En Vercel habrá un proyecto para `app2/frontend` y otro para `app2/backend`. El backend usará `app/main.py` como entrada. Configuraremos 90 segundos de duración de función, si la cuenta lo permite, para que el límite propio de 60 segundos pueda devolver un error controlado. Se comprobará la configuración real antes de publicar.
 
-En Docker habrá dos servicios: backend con Uvicorn y frontend compilado servido por Caddy. Caddy enviará `/api/*` al backend conservando la ruta. En local servirá HTTP; en EC2 usará el nombre público acordado y HTTPS. Solo los certificados necesitan un volumen técnico; no se guardarán consultas.
+En Docker local habrá dos servicios: backend con Uvicorn y frontend compilado servido por Caddy. Caddy enviará `/api/*` al backend conservando la ruta.
 
-Los secretos se proporcionarán al ejecutar el backend. El frontend solo recibirá configuración pública durante la compilación. Los servicios usarán `restart: unless-stopped`. En EC2 se publicarán 80 y 443; SSH quedará limitado a las IP acordadas y el backend no tendrá un puerto público propio.
+Para EC2, por indicación de Hugo el 29/10/2026, se utiliza HTTPS directamente sobre la IP pública, sin Caddy ni un servicio de nombres. `Dockerfile.ec2` compila Vue y prepara una imagen con la API y los archivos estáticos servidos por FastAPI/Uvicorn. Certbot en Ubuntu obtiene y renueva el certificado de IP de Let’s Encrypt. Los certificados son archivos técnicos del host montados en solo lectura; no se guardan consultas.
+
+Los secretos se proporcionarán al ejecutar el backend. El frontend solo recibirá configuración pública durante la compilación. Los servicios usarán `restart: unless-stopped`. En EC2, el contenedor sirve HTTPS en 443 y Certbot usa 80 temporalmente para validar la IP. SSH queda limitado a las IP acordadas. No se expone un puerto 8000 adicional. Al arrancar Ubuntu se consulta su IP mediante IMDSv2, se obtiene el certificado adecuado y se actualiza el código desde `main`.
 
 ## Complejidad
 

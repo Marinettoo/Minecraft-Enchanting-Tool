@@ -67,11 +67,17 @@ Fuentes: [validación estricta de Pydantic](https://docs.pydantic.dev/latest/con
 
 **Decisión**: Dos proyectos en Vercel, uno por capa. Configuraremos la función de FastAPI con 90 segundos de duración para dejar margen al límite propio de 60 segundos. Este valor es una decisión de despliegue, no un cambio del timeout del proveedor. La cuenta y la configuración efectiva se verificarán antes de publicar.
 
-Para Docker usaremos Uvicorn en el backend y Caddy para servir el frontend y dirigir `/api/*` al backend. La misma estructura servirá en local y EC2. En EC2, Caddy gestionará HTTPS con el nombre público acordado. El único volumen previsto conservará certificados, no consultas.
+Para Docker local usaremos Uvicorn en el backend y Caddy para servir el frontend y dirigir `/api/*` al backend. El volumen de Caddy es técnico, no almacena consultas.
+
+**Decisión de despliegue revisada con Hugo el 29/10/2026:** en EC2 se prescinde de Caddy y de un dominio. Se usa un certificado de IP de Let’s Encrypt obtenido con Certbot 5.8.0. Uvicorn sirve directamente HTTPS y FastAPI publica el frontend compilado después de registrar las rutas de la API. Una imagen multietapa reúne los archivos de ambas capas en el contenedor de EC2. Esto conserva la pantalla, la autenticación y el contrato.
+
+Let’s Encrypt admite certificados públicos de IP con el perfil `shortlived`, de unos seis días. Se ha configurado la renovación de Certbot y una acción que recarga el contenedor después de copiar el certificado renovado. Si cambia la IP al encender, se detecta por IMDSv2 y se solicita el certificado correspondiente. La URL cambia con la IP; no se utiliza Elastic IP ni DNS externo.
+
+Fuentes de esta decisión: [certificados de IP con Certbot](https://letsencrypt.org/2026/03/11/shorter-certs-certbot), [archivos estáticos en FastAPI](https://fastapi.tiangolo.com/tutorial/static-files/) y [HTTPS de Uvicorn](https://uvicorn.dev/settings/#https).
 
 **Motivo**: Reduce la infraestructura a las dos capas necesarias y permite repetir la instalación.
 
-**Alternativa considerada**: Añadir otro contenedor solo para el proxy o publicar directamente el backend. No necesitamos ese contenedor adicional ni otro puerto público.
+**Alternativas consideradas**: un dominio con Caddy, DNS dinámico y un nombre que incorpore la IP. Se elige IP con Certbot porque Hugo ha pedido evitar Caddy y los servicios externos de nombres. Se necesita mantener la renovación automática y comprobar el certificado para la IP actual.
 
 Fuentes: [FastAPI en Vercel](https://vercel.com/docs/frameworks/backend/fastapi), [duración de funciones](https://vercel.com/docs/functions/configuring-functions/duration), [proxy de Caddy](https://caddyserver.com/docs/quick-starts/reverse-proxy), [HTTPS de Caddy](https://caddyserver.com/docs/automatic-https), [reinicio de Docker](https://docs.docker.com/engine/containers/start-containers-automatically/) y [reglas de EC2](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/security-group-rules-reference.html).
 

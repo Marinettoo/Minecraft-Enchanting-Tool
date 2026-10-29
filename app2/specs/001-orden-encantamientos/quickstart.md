@@ -125,9 +125,13 @@ docker compose ps
 
 Abrir `http://localhost:8080`. Caddy sirve la web y dirige `/api/*` al backend conservando la ruta. El backend no publica su puerto en Windows.
 
-En EC2 se usará el dominio real como `SITE_ADDRESS`, con DNS apuntando a la instancia, `HOST_BIND=0.0.0.0`, `HTTP_PORT=80`, `HTTPS_PORT=443` y el origen HTTPS en `DOCKER_ALLOWED_ORIGINS`. Antes de crearla se acordarán cuenta, región, presupuesto y dominio. Abrir 80 y 443; limitar SSH a las IP autorizadas. Verificar HTTPS y la recuperación de ambos servicios tras reiniciar.
+En EC2 se utiliza `compose.ec2.yaml` y `Dockerfile.ec2`: un contenedor con FastAPI/Uvicorn sirve la API y el frontend compilado directamente por HTTPS en 443. Certbot, instalado en Ubuntu, solicita y renueva el certificado de la IP. El puerto 80 permite su validación; SSH sigue limitado a las IP autorizadas. No se usa Caddy en EC2.
 
 Los secretos del backend se inyectarán al ejecutar. La compilación del frontend solo recibirá las variables públicas. Los archivos locales y las dependencias de desarrollo quedarán fuera de las imágenes.
+
+En EC2 se ha comprobado el 29/10/2026 el arranque automático con `app2/deploy/met-app2.service`, `app2/deploy/update-on-boot.sh` y `app2/deploy/certificate-ip.sh`. Al encender Ubuntu se descarga `main`, se detecta la IP actual, se prepara su certificado, se construye y se arranca App2. Las variables y los certificados se conservan fuera del repositorio, en `/home/ubuntu/.config/met-app2`. Para actualizar con la instancia encendida: `sudo systemctl restart met-app2.service`.
+
+El acceso público comprobado es `https://54.87.43.68`. Si cambia la IP al parar y encender la instancia, cambia la dirección de acceso. No se necesita un túnel SSH. Las instrucciones completas y las pruebas están en [despliegue-app2.md](../../../docs/despliegue-app2.md).
 
 Al terminar se documentará la retirada de los recursos utilizados, incluidos los que puedan seguir generando costes.
 

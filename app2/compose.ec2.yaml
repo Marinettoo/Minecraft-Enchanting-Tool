@@ -1,0 +1,19 @@
+name: met-app2-https
+
+services:
+  app:
+    build:
+      context: ${MET_APP2_BUILD_CONTEXT:-.}
+      dockerfile: Dockerfile.ec2
+      args:
+        VITE_CLERK_PUBLISHABLE_KEY: ${VITE_CLERK_PUBLISHABLE_KEY:?Configura la clave pública de Clerk}
+    env_file:
+      - ./backend/.env
+    environment:
+      ALLOWED_ORIGINS: ${DOCKER_ALLOWED_ORIGINS:?Configura el origen HTTPS}
+      CLERK_AUTHORIZED_PARTIES: ${DOCKER_ALLOWED_ORIGINS:?Configura el origen HTTPS}
+    ports:
+      - "443:8443"
+    volumes:
+      - /home/ubuntu/.config/met-app2/tls:/run/tls:ro
+    restart: unless-stopped

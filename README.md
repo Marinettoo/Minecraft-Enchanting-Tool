@@ -56,5 +56,22 @@ npm install
 npm run dev                        # http://localhost:5173
 ```
 
+## Cómo ejecutar App 2
+
+App 2 incorpora Clerk y tiene su propio código en `app2/`. La configuración de las variables, las pruebas y los pasos de instalación están en [la guía de App 2](app2/specs/001-orden-encantamientos/quickstart.md).
+
+Con Docker Desktop abierto y los archivos de variables configurados, desde `app2/`:
+
+```bash
+docker compose up --build -d
+```
+
+La versión local se abre en `http://localhost:8080`. Si las imágenes ya están construidas y no hay cambios, basta con `docker compose up -d`.
+
+El despliegue de EC2 comprobado el 29/10/2026 está en [https://54.87.43.68](https://54.87.43.68). Usa FastAPI/Uvicorn con un certificado de IP de Let’s Encrypt gestionado por Certbot. La dirección cambia si AWS asigna otra IP al encender la instancia. El arranque automático, la renovación y el cierre se explican en [despliegue-app2.md](docs/despliegue-app2.md).
+
+La creación de la instancia se recoge en [Markdown](docs/creacion-instancia-aws.md) y [PDF](docs/creacion-instancia-aws.pdf).
+
 ## Estado
-App 1 terminada y desplegada en Vercel. Pendiente: App 2, ERS (`plantillaERS.md`), despliegue en AWS/Docker (`infra/`) y presentación.
+
+App 1 está terminada y desplegada en Vercel. App 2 funciona con Clerk, Docker local y EC2 con HTTPS. El equipo se encarga de su publicación en Vercel. Las comprobaciones específicas de Chrome y Edge, la documentación final, la comparativa y la presentación se completan según la [lista de tareas](app2/specs/001-orden-encantamientos/tasks.md).

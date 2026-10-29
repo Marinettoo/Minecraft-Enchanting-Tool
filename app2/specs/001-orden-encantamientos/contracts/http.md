@@ -77,5 +77,5 @@ Si el navegador no recibe una respuesta utilizable, presenta un aviso local de c
 
 - En local, frontend y backend usan orígenes distintos. El backend admite los orígenes configurados y los encabezados `Authorization` y `Content-Type`. La petición previa de CORS no procesa consultas y no sustituye la autenticación.
 - En Vercel se configura la URL pública del backend en el frontend. Se mantiene la misma ruta y ambos usan HTTPS.
-- En Docker, el navegador usa `/api/procesar` en el mismo origen. Caddy dirige la petición al backend interno conservando la ruta.
+- En Docker local, el navegador usa `/api/procesar` en el mismo origen y Caddy conserva la ruta al dirigirla al backend. En EC2, FastAPI sirve los archivos compilados y la API en el mismo origen HTTPS, con Uvicorn y un certificado de IP. La ruta y el acceso protegido se mantienen.
 - No se añaden endpoints de cuentas, perfiles o historial. Si se necesita una comprobación técnica de salud, será `GET /health`, sin acceso al proveedor ni información privada.

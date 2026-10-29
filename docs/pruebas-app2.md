@@ -74,3 +74,31 @@ La comprobación directa devuelve HTTP 200 para la web y HTTP 401 con `NO_AUTORI
 
 Se completa T033. Las consultas y el reinicio se han comprobado manualmente con Hugo; los errores de entrada y del proveedor siguen respaldados por las pruebas simuladas anteriores. Las instrucciones están en [despliegue-app2.md](despliegue-app2.md).
 
+## 29/10/2026. Primera comprobación de EC2 por túnel SSH
+
+Versión desplegada: `89719b6`, desde `main`. Entorno: Ubuntu 24.04.5 LTS x86_64, `t2.small`, Docker 29.9.2 y Compose 5.6.1. Ambas imágenes se han construido en la instancia y la configuración privada se ha suministrado al ejecutar.
+
+Se ha reiniciado Ubuntu y comprobado el cambio de identificador de arranque. Docker y el servicio `met-app2.service` han arrancado automáticamente. La web responde HTTP 200 y la API rechaza una petición sin sesión con HTTP 401. El backend no publica puertos del host y Caddy solo escucha a través de los puertos vinculados a loopback.
+
+Hugo ha confirmado el acceso con Clerk y el resultado de una consulta real desde el túnel `http://localhost:18080`. No se ha registrado una combinación concreta ni su tiempo en esta confirmación.
+
+Una comprobación adicional ha simulado un fallo de `git fetch` en el actualizador: se han mantenido los mismos contenedores y la web ha seguido respondiendo HTTP 200. La sustitución temporal solo afecta a esa prueba, no al repositorio ni al servicio instalado.
+
+Esta primera comprobación por túnel no completa T035. La prueba pública HTTPS se recoge en el apartado siguiente.
+
+## 29/10/2026. HTTPS directo sobre la IP, sin Caddy
+
+Por indicación de Hugo se ha preparado `Dockerfile.ec2` y `compose.ec2.yaml`: una imagen compila Vue y sirve la web y la API con FastAPI/Uvicorn. La base es `89719b6` más los archivos HTTPS de esta entrega, instalados antes de que el equipo haga el commit. Los contenedores anteriores con Caddy se han detenido.
+
+Certbot 5.8.0 ha obtenido primero un certificado de prueba y después uno público válido de Let’s Encrypt para `54.87.43.68`. Desde Windows, `https://54.87.43.68` devuelve HTTP 200 con validación normal del certificado. La API pública sin sesión devuelve HTTP 401. No se han usado excepciones TLS ni certificados autofirmados.
+
+Hugo ha confirmado que el acceso con Clerk y el cálculo funcionan desde la URL HTTPS, sin túnel ni avisos de certificado. No se ha registrado el contenido de la consulta ni su duración.
+
+La renovación simulada de Certbot con `--dry-run --run-deploy-hooks --no-random-sleep-on-renew` termina correctamente. Se ha comprobado que el temporizador de renovación está habilitado. La acción de renovación copia el certificado al directorio técnico y reinicia el contenedor para volver a cargarlo.
+
+Después se ha reiniciado Ubuntu. Ha cambiado su identificador de arranque, `met-app2.service` ha finalizado correctamente y solo queda activo el contenedor HTTPS. La web vuelve a responder HTTP 200 y la API sin sesión HTTP 401. La IP se ha detectado mediante IMDSv2; en esta prueba de reinicio se ha conservado la misma IP, no se ha simulado una reasignación.
+
+Las **121 pruebas de backend** pasan, incluidas tres pruebas nuevas que comprueban la publicación del frontend compilado, que la API sigue protegida y que no se pueden leer archivos fuera de la carpeta pública. La compilación del frontend también se ha completado dentro de la nueva imagen de EC2.
+
+Se completan T034 y T035. El acceso es por IP con HTTPS, sin dominio externo. Las instrucciones y límites de la actualización están en [despliegue-app2.md](despliegue-app2.md).
+
