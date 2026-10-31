@@ -51,6 +51,12 @@ La segunda consulta confirma acceso y formato básico. No prueba la futura integ
 
 Un intento inicial desde el entorno restringido no llegó a obtener respuesta HTTP. Una comprobación propuesta con el prompt de App 1 fue rechazada antes de ejecutarse; ese contenido no se envió. Las dos respuestas HTTP de la tabla corresponden solo a las instrucciones nuevas.
 
+### Cambio de modelo del 31/10/2026
+
+Al probar el despliegue en Vercel, OpenRouter respondió 404 a todas las consultas: `poolside/laguna-s-2.1:free` ya no está disponible porque ningún proveedor lo sirve. El equipo eligió `nvidia/nemotron-3.5-super-vl:free` como nuevo modelo acordado. Se mantienen la petición, las instrucciones y la validación; solo cambia el modelo.
+
+Se hicieron tres consultas reales con el cliente de App 2 y una espada de diamante con Filo V, Reparación, Irrompibilidad III y Botín III. Las tres superaron el validador con cuatro pasos, en 2,1 a 3,9 segundos. El total fue de 11, 11 y 12 niveles, así que la temperatura 0 no garantiza la misma respuesta. Como antes, esto no demuestra que los costes sean exactos ni mínimos.
+
 ## 4. Backend y datos temporales
 
 **Decisión**: Python 3.12, FastAPI, Pydantic 2, HTTPX, Uvicorn y carga local de variables con `python-dotenv`. Validación estricta y errores con una forma única. Las reglas y las referencias de pasos se comprobarán por separado del cliente de IA.

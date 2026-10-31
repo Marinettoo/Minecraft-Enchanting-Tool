@@ -18,7 +18,7 @@ El flujo será Vue → FastAPI → OpenRouter → FastAPI → Vue. No guardaremo
 | Frontend | JavaScript, Vue 3 y Vite. Tailwind CSS 4 con su complemento de Vite. Sin Vue Router. |
 | Identidad | `@clerk/vue` en la pantalla y `clerk-backend-api` en el backend. |
 | Peticiones a IA | HTTPX, sin reintentos, sin streaming y con un límite total de 60 segundos. |
-| Modelo | `poolside/laguna-s-2.1:free`, a través de OpenRouter. |
+| Modelo | `nvidia/nemotron-3.5-super-vl:free`, a través de OpenRouter. Sustituye a `poolside/laguna-s-2.1:free`, retirado el 31/10/2026. |
 | Ejecución | Uvicorn en local y Docker. Node 22.12 o posterior compatible con las dependencias elegidas para compilar el frontend. |
 | Pruebas | pytest y servicios simulados; revisión manual del recorrido, teclado y tamaños de pantalla. |
 | Pruebas de interfaz | Vitest, Vue Test Utils y jsdom para simular errores, tiempos de espera, doble envío y cierre de sesión. |
