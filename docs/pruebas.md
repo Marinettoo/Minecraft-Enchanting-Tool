@@ -20,6 +20,20 @@ pip install -r requirements-dev.txt
 pytest
 ```
 
+## Automáticas (frontend)
+Están en `app1/frontend/tests/` (Vitest, Vue Test Utils y jsdom). Simulan `fetch`, así que no usan red, backend ni la IA real. Son 27 pruebas:
+
+- **Formulario:** pide objeto y al menos un encantamiento sin llamar al servidor; el arco no tiene material; solo se ofrecen los encantamientos que admite el objeto; se bloquean los incompatibles (Filo y Castigo) y se limita a 8; al cambiar de objeto se limpian la selección y el resultado.
+- **Envío y resultado:** una sola petición con el JSON del contrato y el nivel elegido; las referencias del backend se muestran como texto legible; el botón se bloquea y no hay envíos duplicados; una consulta nueva sustituye a la anterior; las advertencias con HTML se muestran como texto; no se guarda nada en el navegador.
+- **Errores:** 422, 502 y 504 con su mensaje, error sin mensaje, servidor caído y tiempo agotado. En todos, el botón vuelve a estar activo y no hay reintento automático.
+- **Listas del contrato (`data.js`):** 58 objetos, 39 encantamientos y 8 grupos de incompatibilidad, y que los encantamientos y niveles máximos coinciden con `app1/backend/rules.py`.
+
+Ejecutar (desde `app1/frontend`, con las dependencias instaladas con `npm ci`):
+
+```bash
+npm test
+```
+
 ## Manuales (frontend + backend + IA)
 Con `AI_MODE=openrouter` en local, o en la web desplegada. Anotar el resultado de cada caso.
 
