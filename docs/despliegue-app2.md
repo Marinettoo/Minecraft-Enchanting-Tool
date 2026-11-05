@@ -137,6 +137,23 @@ Certbot 5.8.0 se ha instalado mediante su paquete snap oficial. Ha obtenido un c
 Certbot guarda el original en `/etc/letsencrypt/live/met-app2-ip`. El contenedor recibe una copia técnica en `/home/ubuntu/.config/met-app2/tls`, montada en solo lectura. El directorio tiene permisos `750`, los archivos `640` y grupo `10001`, correspondiente al usuario sin privilegios del contenedor. No hay claves de certificados en las imágenes ni en Git.
 
 ### Actualización automática al encender
+#### Diagrama de actividad del arranque y la actualización automática
+
+Al encender la instancia, un servicio de Ubuntu ejecuta nuestro script para actualizar el código y arrancar App2.
+
+```mermaid
+flowchart TD
+    A[Se enciende la instancia de AWS] --> B[Ubuntu inicia y espera a la red y a Docker]
+    B --> C[met-app2.service ejecuta el script update-on-boot.sh instalado]
+    C --> D[Descarga los cambios de la rama main de GitHub]
+    D --> E[Comprueba la IP pública y prepara el certificado HTTPS]
+    E --> F[Valida la configuración y construye la imagen de Docker]
+    F --> G[Arranca App2 con Docker Compose]
+    G --> H[Comprueba que la web responde y que la API rechaza peticiones sin sesión]
+    H --> I[App2 queda disponible por HTTPS]
+```
+
+La actualización se realiza al encender la instancia, no después de cada cambio en GitHub. Si falla el proceso, el script intenta mantener o arrancar los contenedores existentes y registra el error.
 
 Los archivos [update-on-boot.sh](../app2/deploy/update-on-boot.sh), [certificate-ip.sh](../app2/deploy/certificate-ip.sh) y [met-app2.service](../app2/deploy/met-app2.service) recogen la configuración instalada. Para repetir su instalación, una vez descargada la versión con estos archivos y configuradas las variables y los enlaces anteriores:
 
