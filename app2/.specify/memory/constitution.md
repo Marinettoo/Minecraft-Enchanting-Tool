@@ -26,7 +26,8 @@ comparar ambas aplicaciones.
 El flujo DEBE ser Vue → FastAPI → OpenRouter → FastAPI → Vue. FastAPI DEBE verificar el acceso
 y validar la selección antes de consultar a IA. Cada envío autorizado y válido DEBE provocar
 una sola petición al proveedor. NO DEBE haber reintentos automáticos, consultas complementarias
-ni sustitución automática de modelo. El modelo acordado es `poolside/laguna-s-2.1:free`.
+ni sustitución automática de modelo. El modelo acordado es `nvidia/nemotron-3.5-super-vl:free`. Sustituye a `poolside/laguna-s-2.1:free`, retirado de OpenRouter
+el 31/10/2026.
 
 La entrada DEBE limitarse a un objeto y entre 1 y 8 encantamientos distintos del anexo A de la
 ERS, con niveles enteros estrictos y compatibilidades comprobadas en backend. NO DEBEN aceptarse

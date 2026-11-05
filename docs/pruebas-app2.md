@@ -102,3 +102,8 @@ Las **121 pruebas de backend** pasan, incluidas tres pruebas nuevas que comprueb
 
 Se completan T034 y T035. El acceso es por IP con HTTPS, sin dominio externo. Las instrucciones y límites de la actualización están en [despliegue-app2.md](despliegue-app2.md).
 
+## 31/10/2026. Vercel y cambio de modelo
+
+App 2 se publica en Vercel con dos proyectos: el frontend en https://met-app2-frontend.vercel.app y el backend en https://met-app2-backend.vercel.app. Una petición directa al backend sin sesión responde 401 `NO_AUTORIZADO`, con CORS limitado a la URL del frontend.
+
+Con la sesión iniciada, las consultas fallaban: OpenRouter respondía 404 porque `poolside/laguna-s-2.1:free` ya no está disponible. Se cambia a `nvidia/nemotron-3.5-super-vl:free`. Tres consultas reales desde el cliente de App 2 superan el validador en 2,1 a 3,9 segundos (detalle en research.md). Las **121 pruebas de backend** pasan con el nuevo modelo.

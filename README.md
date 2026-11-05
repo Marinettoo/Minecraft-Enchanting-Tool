@@ -19,7 +19,7 @@ Las dos resuelven la misma necesidad, pero permiten comparar dos formas de traba
 | Interfaz y servidor | Vue 3, Tailwind CSS y FastAPI. | Vue 3, Tailwind CSS y FastAPI, con código propio. |
 | Despliegue comprobado | Frontend y backend en Vercel. | Docker local y AWS EC2 con HTTPS. |
 
-Ambas utilizan OpenRouter con `poolside/laguna-s-2.1:free`. El servidor comprueba los datos antes de consultar y revisa la estructura y la suma de la respuesta antes de mostrarla. Cada envío válido hace una sola consulta a IA, sin reintentos automáticos.
+Ambas utilizan OpenRouter. App 2 usa `nvidia/nemotron-3.5-super-vl:free` desde el 31/10/2026, porque `poolside/laguna-s-2.1:free` ya no está disponible. El servidor comprueba los datos antes de consultar y revisa la estructura y la suma de la respuesta antes de mostrarla. Cada envío válido hace una sola consulta a IA, sin reintentos automáticos.
 
 ### Proceso de App1
 

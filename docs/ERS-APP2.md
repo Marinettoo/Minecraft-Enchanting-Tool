@@ -98,7 +98,7 @@ flowchart LR
     F <-->|"Acceso y sesión"| C["Clerk"]
     F -->|"Selección JSON y token"| B["FastAPI: acceso y validación"]
     C -.->|"Claves públicas para verificar la sesión"| B
-    B -->|"Una consulta si está autorizada y es válida"| I["OpenRouter: poolside/laguna-s-2.1:free"]
+    B -->|"Una consulta si está autorizada y es válida"| I["OpenRouter: nvidia/nemotron-3.5-super-vl:free"]
     I -->|"Propuesta"| B
     B -->|"Resultado comprobado o error"| F
     F -->|"Pasos y costes estimados"| U
@@ -140,7 +140,7 @@ Dividimos la única función en partes para poder desarrollarlas y comprobarlas 
 |---|---|---|
 | RES-01 | Mantener el alcance de la sección 1.3 en todos los despliegues. | Obligación del enunciado. |
 | RES-02 | Python y FastAPI en backend; Vue y Tailwind en frontend. | FastAPI y Tailwind son obligatorios; Vue es la opción elegida por el equipo. |
-| RES-03 | Usar OpenRouter con el modelo `poolside/laguna-s-2.1:free`, con una llamada por envío autorizado y válido. | Proveedor y modelo elegidos por el equipo; límite de llamadas del enunciado. |
+| RES-03 | Usar OpenRouter con el modelo `nvidia/nemotron-3.5-super-vl:free` (sustituye a `poolside/laguna-s-2.1:free`, retirado de OpenRouter el 31/10/2026), con una llamada por envío autorizado y válido. | Proveedor y modelo elegidos por el equipo; límite de llamadas del enunciado. |
 | RES-04 | Usar Clerk para la identidad externa, sin cuentas, contraseñas, roles ni perfiles propios. | Obligación del enunciado. |
 | RES-05 | Crear la App 2 desde cero mediante Spec Kit y asistencia de IA, con revisión humana e historial previo al código. | Obligación del enunciado. |
 | RES-06 | Utilizar pytest con servicios simulados y Git/GitHub con contribuciones identificables. | Obligación del enunciado. |
@@ -249,7 +249,7 @@ Todos los requisitos tienen prioridad **alta** y están aceptados para la especi
 | Prioridad y fuente | Alta; FUE-01 y FUE-06. |
 | Precondiciones | RF-01 y RF-03 superados; configuración privada disponible. |
 | Entradas | Selección validada e instrucciones para obtener un orden dentro del alcance. |
-| Comportamiento esperado | Solicitar la propuesta a `poolside/laguna-s-2.1:free`, con el tiempo de espera de RNF-01. No hacer consultas complementarias, cambiar de modelo ni reintentar automáticamente. |
+| Comportamiento esperado | Solicitar la propuesta a `nvidia/nemotron-3.5-super-vl:free`, con el tiempo de espera de RNF-01. No hacer consultas complementarias, cambiar de modelo ni reintentar automáticamente. |
 | Salidas y postcondiciones | Respuesta del proveedor que pasa a RF-05. |
 | Errores o alternativas | Fallo del servicio o tiempo agotado, tratados por RF-07. Un nuevo envío manual del jugador será otra solicitud. |
 | Dependencias | DEP-01, RNF-01 e INT-02. |

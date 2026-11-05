@@ -155,7 +155,7 @@ Decisión tomada: el orden y los costes los calcula **exclusivamente la IA**. El
 | Decisión | Propuesta | Quién la cierra |
 | --- | --- | --- |
 | Edición de Minecraft | Java (se asume en este documento) | Los dos |
-| Proveedor y modelo de IA | OpenRouter con `poolside/laguna-s-2.1:free` (cerrada). Sin Dify: FastAPI llama directamente a OpenRouter | Los dos |
+| Proveedor y modelo de IA | OpenRouter con `poolside/laguna-s-2.1:free` (cerrada). En App 2 se sustituye el 31/10/2026 por `nvidia/nemotron-3.5-super-vl:free`, porque el anterior ya no está disponible. Sin Dify: FastAPI llama directamente a OpenRouter | Los dos |
 | Vue o React | Vue (cerrada) | Los dos |
 | Tiempo máximo de espera | 60 segundos (cerrada) | Backend |
 | Lista exacta de objetos y encantamientos | La de la sección 5 | Los dos |
@@ -199,5 +199,5 @@ Los costes por paso y el total deben ser enteros no negativos. El total debe coi
 - La espera al proveedor se limita a 60 segundos. Al agotarse se responde 504 con `IA_TIMEOUT`.
 - Un fallo del proveedor produce 502 con `IA_NO_DISPONIBLE`. Una selección incorrecta produce 422 con `VALIDACION`.
 - Los errores mantienen la forma `error.codigo` y `error.mensaje` de la sección 4, sin secretos ni detalles privados.
-- Solo se realiza una llamada por envío autorizado y válido a `poolside/laguna-s-2.1:free`. No hay reintentos automáticos ni cambios automáticos de modelo.
+- Solo se realiza una llamada por envío autorizado y válido al modelo acordado (`nvidia/nemotron-3.5-super-vl:free` en App 2). No hay reintentos automáticos ni cambios automáticos de modelo.
 - Los despliegues públicos utilizan HTTPS. El token de sesión no se envía a la IA. Las claves privadas no se incluyen en los datos, las instrucciones ni el resultado de la consulta.

@@ -46,7 +46,7 @@ Completar el archivo local con la configuración de esta tabla. No subirlo a Git
 | Variable | Uso |
 | --- | --- |
 | `OPENROUTER_API_KEY` | Clave privada del proveedor. Solo backend. |
-| `OPENROUTER_MODEL` | `poolside/laguna-s-2.1:free`. |
+| `OPENROUTER_MODEL` | `nvidia/nemotron-3.5-super-vl:free`. |
 | `AI_TIMEOUT_SECONDS` | `60`. |
 | `CLERK_JWT_KEY` | Clave pública PEM de la instancia Clerk usada para verificar la firma localmente. Se copiará siguiendo el formato del archivo de ejemplo. |
 | `CLERK_ISSUER` | Emisor exacto de esa instancia. |

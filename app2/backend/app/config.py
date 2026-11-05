@@ -9,7 +9,7 @@ from cryptography.hazmat.primitives.serialization import load_pem_public_key
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
 from dotenv import dotenv_values
 
-MODEL = "poolside/laguna-s-2.1:free"
+MODEL = "nvidia/nemotron-3.5-super-vl:free"
 LOCAL_ORIGINS = ("http://localhost:5173", "http://127.0.0.1:5173")
 
 
